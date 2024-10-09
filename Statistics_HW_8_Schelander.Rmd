@@ -1,0 +1,1308 @@
+---
+title: "APPDS - Statistics"
+subtitle: "HW 8 - 2022/12/22 - Schelander Martina"
+output:
+  html_document:
+    df_print: paged
+---
+
+<style>
+table, th, td {
+  border:1px solid black;
+  padding: 4px;
+}
+tr:nth-child(odd) {
+  background-color: #E6F6F669;
+}
+th{
+  background-color: #D6EEEE;
+}
+</style>
+
+
+Prerequisites - Load libraries
+```{r message=FALSE, warning=FALSE}
+library(rela)
+library(psych)
+library(car)
+library(ggpubr)
+```
+
+***
+
+<h2 id="Exercise_87"> Exercise 87 - PCA - Survey on attitutes towards foreigners </h2>
+<p>A survey was designed at the Institute of Sociology at the
+University of Marburg and conducted at two metalworking
+companies in Hesse on "attitudes towards foreigners". The
+respondents were presented with 15 statements. The answers
+were each given on a seven-point scale, intended to represent
+complete disagreement (1) to complete agreement (7). The
+results of 90 respondents were stored in variables a1 to a15 of
+the PCA-foreigner.txt file. </p>
+
+<h3>Questions of questionnaire </h3>
+<p>a1 - The integration of foreigners must be improved.
+<br>a2 - Refugee money must be reduced.
+<br>a3 - German money should be spent on German issues.
+<br>a4 - Germany is not the social welfare office of the world.
+<br>a5 - Good coexistence must be striven for.
+<br>a6 - The right of asylum should be restricted
+<br>a7 - Germans are becoming a minority.
+<br>a8 - The right of asylum must be protected throughout Europe.
+<br>a9 - Xenophobia harms the German economy.
+<br>a10 - Housing should be created for Germans first.
+<br>a11 - We are foreigners too, almost everywhere.
+<br>a12 - Multicultural means multicriminal.
+<br>a13 - The boat is full.
+<br>a14 - Foreigners out.
+<br>a15 - Foreigner integration is genocide.
+</p>
+
+
+<p>Level of Agreement
+<br>1 Strongly disagree
+<br>2 Disagree
+<br>3 Somewhat disagree
+<br>4 Neither agree or disagree
+<br>5 Somewhat agree
+<br>6 Agree
+<br>7 Strongly agree</p>
+
+
+
+<h3>Further questions of questionnaire</h3>
+<p>
+- Satisfaction with own economic circumstances ("ecosituation")
+<br>1 yes
+<br>2 no
+<br>3 uncertain
+- Gender ("sex")
+<br>1 female
+<br>2 male
+-Year of birth ("yearbirth")
+<br>1 1935-1940
+<br>2 1941-1950
+<br>3 1951-1960
+<br>4 1961-1970
+- Socio-political commitment ("commitment")
+<br>1 yes
+<br>2 no
+<br>3 uncertain
+- Position in the company ("position")
+<br>1 blue-collar worker
+<br>2 qualified specialist
+<br>3 white-collar worker
+</p>
+
+<h3> Aim of the study </h3>
+<ol><li> The aim of this study is to use the data-set
+PCA-foreigner.txt and perform a PCA to identify the main
+components/dimensions.
+</li><li> Interpretation and naming of the detected underlying
+components.
+</li><li> Then, perform a reliability analyses of the extracted
+dimensions.
+</li><li> As a next step, scores for every of the new dimensions
+should be calculated and stored as new variables.
+</li><li> Finally, find associations between the new variables and
+the other variables in the data set.</li>
+</ol>
+
+<h3> Aim of the study </h3>
+<ol><li> How many factors can be extracted?
+</li><li> Which items can be assigned to the extracted
+components?
+</li><li> What is the reliability (Crohnbach’s Alpha) of each of the
+new components?
+</li><li> Is there an association between the extracted components and
+<br>1. the satisfaction with own economic circumstances? 
+<br>2. age?
+<br>3. gender?
+<br>4. socio-political commitment?
+<br>5. the position in the company?
+</li>
+</ol>
+
+***
+
+
+<h3>1. Load and inspect the data</h3>
+```{r}
+foreigners_survey<-read.delim("C:\\FH APPDS\\Skripten und HÜ\\Statistics\\HW\\Datasets-20221012\\PCA-foreigner.txt",stringsAsFactors=F)
+str(foreigners_survey)
+head(foreigners_survey)
+```
+
+<h3> Remove missing values and  not used values for PCA<h3>
+```{r}
+foreigners_pre<-na.omit(foreigners_survey)
+foreigners_pre$nr<-NULL
+foreigners_pre$ecosituation<-NULL
+foreigners_pre$commitment<-NULL
+foreigners_pre$position<-NULL
+foreigners_pre$yearbirth<-NULL
+foreigners_pre$sex<-NULL
+```
+
+<h3> Perform KMO and Bartlett test on the data to find out if PCA is appropriate (using rela and psych package)</h3>
+```{r}
+paf.obj <- paf(as.matrix(foreigners_pre))
+cat("KMO statistics:", paf.obj$KMO, " Bartlett statistics:", + paf.obj$Bartlett, "\n")
+```
+```{r}
+bart <- cortest.bartlett(cor(foreigners_pre), n = nrow(foreigners_pre))
+unlist(bart)
+```
+<p><table>
+  <tr>
+    <th><b>Results of KMO and Bartlett</b></th>
+  </tr>
+  <tr>
+    <td>The value for the KMO statistic is >0.8, indicating that the
+data are very useful for PCA.
+<br>The Bartlett test is highly significant and does not argue
+against the use of PCA.</td>
+  </tr>
+</table></p>
+
+The value for the KMO statistic is >0.8, indicating that the
+data are very useful for PCA.
+The Bartlett test is highly significant and does not argue
+against the use of PCA.
+
+<h3>Determining the number of principal components</h3>
+
+```{r fig.align="center", fig.cap = "Figure 1 - Scree plot - Excercise 87"}
+VSS.scree(foreigners_pre)
+```
+
+<p><table>
+  <tr>
+    <th><b>Considered Number of components</b></th>
+  </tr>
+  <tr>
+    <td>The scree plot indicates that there seem to be 4 underlying components that measure our 15 variables.</td>
+  </tr>
+</table></p>
+
+<h3>Extraction of principal components</h3>
+```{r}
+pca.foreigner <- principal(foreigners_pre, 4, rotate = "none")
+pca.foreigner$criteria <- NULL
+pca.foreigner
+```
+
+<p><table>
+  <tr>
+    <th><b>Result 1st analysis of extraction of principal components without Rotation</b></th>
+  </tr>
+  <tr>
+    <td>There are no real low values in the communalities. Therefore all of them will be left in the analysis. 
+    </td>
+  </tr>
+    <tr>
+    <td>Eigenvalues are found in the column SS loadings. Proportion of the total variance that they explain is
+given in the line Proportion Var.The sum of the variance proportions is given in the line Cumulative Var. The component matrix shows the Pearson correlations
+between the items and the components, which are called loadings.</td>
+  </tr>
+</table></p>
+
+
+
+
+<h3>Extraction of principal components WITH varimax rotation</h3>
+```{r}
+pca.foreigner.r <- principal(foreigners_pre, 4)
+pca.foreigner.r$criteria <- NULL
+print(pca.foreigner.r, cut = 0.5, sort = TRUE, digits = 2)
+
+```
+<h3>Results for analysis of extraction of principal components with Varimax Rotation and Component summary term</h3>
+
+<p><table>
+  <tr>
+    <th><b>First Component</b></th>
+    <th><b>Second Component</b></th>
+    <th><b>Third Component</b></th>
+    <th><b>Fourth Component</b></th>
+  </tr>
+    <tr>
+    <th>Xenophobia - Fear of foreigners</th>
+    <th>Integration of refugees</th>
+    <th>Expenses on foreigners-integration</th>
+    <th>Economic influence</th>
+  </tr>
+  <tr>
+    <td>a4, a7, a12, a13, a14, a15</td>
+    <td>a1, a2, a5, a8</td>
+    <td>a3, a6, a10</td>
+    <td>a9</td>
+</table></p>
+
+
+<h3>Cronbach‘s Alpha of five principal components</h3>
+
+```{r fig.align="center", fig.cap = "Visulaisation of procipal components - Excercise 87"}
+fa.diagram(pca.foreigner.r, cut = 0.5, cex = 0.8, rsize = 0.5, main = "")
+```
+
+
+<h4> First Component - "Xenophobia - Fear of foreigners"</h4>
+```{r}
+psych::alpha(subset(foreigners_pre, select = c(a4, a7, a12, a13, a14, a15)), check.keys =TRUE)
+```
+<p>The alpha value is 0.84111. By leaving out one variable (a4, a7, a12, a13, a14, a15) we woul achieve a raw alpha that's lower (0.82934, 0.81890, 0.80478, 0.79242, 0.82060, 0.82212). So no variable will be left out in this case.</p>
+
+<h4> Second Component - "Integration of refugees"</h4>
+```{r}
+psych::alpha(subset(foreigners_pre, select = c(a1, a2, a5, a8)), check.keys =TRUE)
+```
+
+<p>The raw alpha value is 0.7695. By leaving out variable a2 we would achieve an even higher value of 0.77633. So a2 will be left out. </p>
+
+<h4> Third Component - "Expenses on foreigners-integration"</h4>
+```{r}
+psych::alpha(subset(foreigners_pre, select = c(a3, a6, a10)), check.keys =TRUE)
+```
+<p>The raw alpha value is 0.71966. By leaving out variable a6 we would achieve an even higher value of 0.77386. So a2 will be left out. </p>
+
+
+<h4> Fourth Component - "Economic influence"</h4>
+
+<p>Is measured by only one value (a9). No new variable will be created.</p>
+
+
+<h3>Calculation of new variables</h3>
+
+<p>Xenophobia </p>
+<p>All considered questions in this group are "negatively" formulated so we can sum them up and calculate the mean </p>
+```{r}
+foreigners_survey$xenophobia = (foreigners_pre$a4 + foreigners_pre$a7 + foreigners_pre$a12 + foreigners_pre$a13 + foreigners_pre$a14 + foreigners_pre$a15)/6
+
+```
+
+<p>Integration </p>
+<p>All considered questions in this group are "positively" formulated so we can sum them up and calculate the mean </p>
+```{r}
+foreigners_survey$integration = (foreigners_pre$a1 + foreigners_pre$a5 + foreigners_pre$a8)/3
+
+```
+
+<p>Expenses </p>
+<p>All considered questions in this group are "negatively" formulated so we can sum them up and calculate the mean </p>
+```{r}
+foreigners_survey$expenses = (foreigners_pre$a3 + foreigners_pre$a10)/2
+
+```
+
+
+<h3>Summary of newly created variables</h3>
+```{r}
+foreigners_survey
+summary(foreigners_survey$xenophobia)
+summary(foreigners_survey$integration)
+summary(foreigners_survey$expenses)
+
+```
+
+***
+
+<h2>Association between the extracted components and other variables in the dataset</h2>
+
+<h3>1. Satisfaction with own economic circumstances<h3>
+
+```{r}
+unique(foreigners_survey$ecosituation)
+```
+<p>We consider three different groups (yes, no, uncertain) and the metric variables xenophobia, integration and expenses. The ANOVA test will be used to find possible associations. </p>
+
+<h4>1.1 Formulation of the hypotheses - "Xenophobia"</h4>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean measured xenophobia for the 3 eco-situation groups are all equal.</td>
+    <td> The mean measured xenophobia for at least one of the groups differs from the others.</td>
+  </tr>
+</table></p>
+
+
+<h4>1.1.1 Data visualization</h4>
+```{r message=FALSE, warning=FALSE}
+ggboxplot(foreigners_survey, x = "ecosituation", y = "xenophobia", color = "ecosituation", width=0.31, varwidth=TRUE, palette = c("#00AFBB", "#E7B800", "#FC4E07", "#AE4371"), order = c("yes", "no", "uncertain"), ylab = "xenophobia", xlab = "ecosituation") +
+  geom_violin(color="thistle3",fill="thistle1",alpha=0.1)+
+  labs(x = "Satisfaction with own ecosituation", y = "Xenophobia", caption = "Figure 2 - Boxplot and Violinplot to check for normal distributions, Exercise 87")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+ theme_grey() + theme(plot.title = element_text(hjust = 0.5))
+```
+
+<h4>1.1.2 Prerequisites - Check for normal distribution of the variable</h4>
+```{r}
+shapiro_xenophobia = shapiro.test(foreigners_survey$xenophobia)
+shapiro_xenophobia
+```
+
+
+<p>The Shapiro tests indicates a not normal distribution with a p-value of 0.001053, but the number of observations is sufficient to apply the central limit theorem allowing us to apply ANOVA. </p>
+
+<h4>1.1.3 Analysis ANOVA</h4>
+```{r}
+res.aov <- aov(xenophobia ~ ecosituation, data = foreigners_survey)
+summary(res.aov)
+```
+
+<h4>1.1.4 Pairwise comparison between the groups</h4>
+<p>Tukey HSD (Tukey Honest Significant Differences)</p>
+```{r}
+TukeyHSD(res.aov)
+```
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for significance level = 0.05</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4>The p-value of the ANOVA test is 0.00122.<br>At a significance level of 0.05 H<sub>0</sub> has to be rejected. The mean measured xenophobia for at least one of the groups differs from the others. There is a significance between the groups "yes-no" and "yes-uncertain" as the Tukey HSD suggests</h4>
+  </td>
+</tr>
+</table>
+
+<h4>1.1.5 Check for test validity</h4>
+<p>Homogeneity of the variances</p>
+```{r}
+leveneTest(xenophobia ~ ecosituation, data = foreigners_survey)
+```
+
+<p> The p value is 0.1896. So there is no evidence to suggest that the variance across groups is different. We can assume the homogeneity of variances.</p>
+
+```{r}
+aov_residuals <- residuals(object = res.aov)
+shapiro.test(x = aov_residuals)
+```
+
+<p> The shapiro test on the residuals finds no indication that the normality is violated. There is no systematic error. </p>
+
+
+
+
+<h4>1.2 Formulation of the hypotheses - "Integration"</h4>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean measured "Integration"-value for the 3 eco-situation groups are all equal.</td>
+    <td> The mean measured "Integration"-value for at least one of the groups differs from the others.</td>
+  </tr>
+</table></p>
+
+
+<h4>1.2.1 Data visualization</h4>
+```{r message=FALSE, warning=FALSE}
+ggboxplot(foreigners_survey, x = "ecosituation", y = "integration", color = "ecosituation", width=0.31, varwidth=TRUE, palette = c("#00AFBB", "#E7B800", "#FC4E07", "#AE4371"), order = c("yes", "no", "uncertain"), ylab = "Integration", xlab = "Ecosituation") +
+  geom_violin(color="thistle3",fill="thistle1",alpha=0.1)+
+  labs(x = "Ecosituation", y = "Integration", caption = "Figure 3 - Boxplot and Violinplot to check for normal distributions, Exercise 87")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+ theme_grey() + theme(plot.title = element_text(hjust = 0.5))
+```
+
+<h4>1.2.2 Prerequisites - Check for normal distribution of the variable</h4>
+```{r}
+shapiro_Integration = shapiro.test(foreigners_survey$integration)
+shapiro_Integration
+```
+
+
+<p>The Shapiro tests indicates a not normal distribution with a p-value of 2.5e-08, but the number of observations is sufficient to apply the central limit theorem allowing us to apply ANOVA. </p>
+
+<h4>1.2.3 Analysis ANOVA</h4>
+```{r}
+res.aov <- aov(integration ~ ecosituation, data = foreigners_survey)
+summary(res.aov)
+```
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for significance level = 0.05</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4>The p-value of the ANOVA test is 0.35.<br>At a significance level of 0.05 H<sub>0</sub> has to be accepted. The mean measured "Integration"-value for the 3 eco-situation groups are all equal.</h4>
+  </td>
+</tr>
+</table>
+
+<h4>1.2.4 Check for test validity</h4>
+<p>Homogeneity of the variances</p>
+```{r}
+leveneTest(integration ~ ecosituation, data = foreigners_survey)
+```
+
+<p> The p value is 0.57. So there is no evidence to suggest that the variance across groups is different. We can assume the homogeneity of variances.</p>
+
+```{r}
+aov_residuals <- residuals(object = res.aov)
+shapiro.test(x = aov_residuals)
+```
+
+<p> The shapiro test on the residuals is highly significant. The normality is violated. There might be a systematic error and the test results are to be questioned. </p>
+
+
+
+<h4>1.3 Formulation of the hypotheses - "Expenses"</h4>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean measured "Expenses"-value for the 3 eco-situation groups are all equal.</td>
+    <td> The mean measured "Expenses"-value for at least one of the groups differs from the others.</td>
+  </tr>
+</table></p>
+
+
+
+<h4>1.3.1 Data visualization</h4>
+```{r message=FALSE, warning=FALSE}
+ggboxplot(foreigners_survey, x = "ecosituation", y = "expenses", color = "ecosituation", width=0.31, varwidth=TRUE, palette = c("#00AFBB", "#E7B800", "#FC4E07", "#AE4371"), order = c("yes", "no", "uncertain"), ylab = "expenses", xlab = "ecosituation") +
+  geom_violin(color="thistle3",fill="thistle1",alpha=0.1)+
+  labs(x = "Ecosituation", y = "Expenses", caption = "Figure 4 - Boxplot and Violinplot to check for normal distributions, Exercise 87")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+ theme_grey() + theme(plot.title = element_text(hjust = 0.5))
+```
+
+<h4>1.3.2 Prerequisites - Check for normal distribution of the variable</h4>
+```{r}
+shapiro_expenses = shapiro.test(foreigners_survey$expenses)
+shapiro_expenses
+```
+
+
+<p>The Shapiro tests indicates a not normal distribution with a p-value of 3e-04, but the number of observations is sufficient to apply the central limit theorem allowing us to apply ANOVA. </p>
+
+<h4>1.3.3 Analysis ANOVA</h4>
+```{r}
+res.aov <- aov(expenses ~ ecosituation, data = foreigners_survey)
+summary(res.aov)
+```
+
+<h4>1.3.4 Pairwise comparison between the groups</h4>
+<p>Tukey HSD (Tukey Honest Significant Differences)</p>
+```{r}
+TukeyHSD(res.aov)
+```
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for significance level = 0.05</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4>The p-value of the ANOVA test is 0.0059.<br>At a significance level of 0.05 H<sub>0</sub> has to be rejected. The mean measured "Expenses"-value for at least one of the groups differs from the others. There is a significance between the groups "yes-uncertain" as the Tukey HSD suggests</h4>
+  </td>
+</tr>
+</table>
+
+<h4>1.3.5 Check for test validity</h4>
+<p>Homogeneity of the variances</p>
+```{r}
+leveneTest(expenses ~ ecosituation, data = foreigners_survey)
+```
+
+<p> The p value is 0.27. So there is no evidence to suggest that the variance across groups is different. We can assume the homogeneity of variances.</p>
+
+```{r}
+aov_residuals <- residuals(object = res.aov)
+shapiro.test(x = aov_residuals)
+```
+
+<p> The shapiro test on the residuals finds no indication that the normality is violated. There is no systematic error. </p>
+
+
+
+
+
+***
+
+<h3>2. Age<h3>
+
+```{r}
+unique(foreigners_survey$yearbirth)
+```
+
+```{r}
+foreigners_survey_age = na.omit(foreigners_survey[!foreigners_survey$yearbirth %in% c(" "), ])
+```
+
+<p>Remove missing values </p>
+
+```{r}
+unique(foreigners_survey_age$yearbirth)
+```
+
+
+<p>We consider four different groups and the metric variables xenophobia, integration and expenses. The ANOVA test will be used to find possible associations.</p>
+
+
+<h4>2.1 Formulation of the hypotheses - "Xenophobia"</h4>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean measured xenophobia for the 4 age groups are all equal.</td>
+    <td> The mean measured xenophobia for at least one of the groups differs from the others.</td>
+  </tr>
+</table></p>
+
+
+<h4>2.1.1 Data visualization</h4>
+```{r message=FALSE, warning=FALSE}
+ggboxplot(foreigners_survey_age, x = "yearbirth", y = "xenophobia", color = "yearbirth", width=0.31, varwidth=TRUE, palette = c("#00AFBB", "#E7B800", "#FC4E07", "#AE4371"), order = c("1935-1940", "1941-1950", "1951-1960", "1961-1970"), ylab = "xenophobia", xlab = "yearbirth") +
+  geom_violin(color="thistle3",fill="thistle1",alpha=0.1)+
+  labs(x = "Agegroup", y = "Xenophobia", caption = "Figure 5 - Boxplot and Violinplot to check for normal distributions, Exercise 87")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+ theme_grey() + theme(plot.title = element_text(hjust = 0.5))
+```
+
+<h4>2.1.2 Prerequisites - Check for normal distribution of the variable</h4>
+```{r}
+shapiro_xenophobia = shapiro.test(foreigners_survey_age$xenophobia)
+shapiro_xenophobia
+```
+
+
+<p>The Shapiro tests indicates a not normal distribution with a p-value of 0.00076, but the number of observations is sufficient to apply the central limit theorem allowing us to apply ANOVA. </p>
+
+<h4>2.1.3 Analysis ANOVA</h4>
+```{r}
+res.aov <- aov(xenophobia ~ yearbirth, data = foreigners_survey_age)
+summary(res.aov)
+```
+
+<h4>2.1.4 Pairwise comparison between the groups</h4>
+<p>Tukey HSD (Tukey Honest Significant Differences)</p>
+```{r}
+TukeyHSD(res.aov)
+```
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for significance level = 0.05</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4>The p-value of the ANOVA test is 0.11.<br>At a significance level of 0.05 H<sub>0</sub> has to be accepted.The mean measured xenophobia for the 4 age groups are all equal. </h4>
+  </td>
+</tr>
+</table>
+
+<h4>2.1.5 Check for test validity</h4>
+<p>Homogeneity of the variances</p>
+```{r}
+leveneTest(xenophobia ~ yearbirth, data = foreigners_survey_age)
+```
+
+<p> The p value is 0.28. So there is no evidence to suggest that the variance across groups is different. We can assume the homogeneity of variances.</p>
+
+```{r}
+aov_residuals <- residuals(object = res.aov)
+shapiro.test(x = aov_residuals)
+```
+
+<p> The shapiro test on the residuals is significant with 0.0021. There seems to be a systematic error. </p>
+
+
+
+
+<h4>2.2 Formulation of the hypotheses - "Integration"</h4>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean measured "Integration"-value for the 4 age groups groups are all equal.</td>
+    <td> The mean measured "Integration"-value for at least one of the groups differs from the others.</td>
+  </tr>
+</table></p>
+
+
+<h4>2.2.1 Data visualization</h4>
+```{r message=FALSE, warning=FALSE}
+ggboxplot(foreigners_survey_age, x = "yearbirth", y = "integration", color = "yearbirth", width=0.31, varwidth=TRUE, palette = c("#00AFBB", "#E7B800", "#FC4E07", "#AE4371"), order = c("1935-1940", "1941-1950", "1951-1960", "1961-1970"), ylab = "Integration", xlab = "yearbirth") +
+  geom_violin(color="thistle3",fill="thistle1",alpha=0.1)+
+  labs(x = "Agegroup", y = "Integration", caption = "Figure 6 - Boxplot and Violinplot to check for normal distributions, Exercise 87")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+ theme_grey() + theme(plot.title = element_text(hjust = 0.5))
+```
+
+<h4>2.2.2 Prerequisites - Check for normal distribution of the variable</h4>
+```{r}
+shapiro_Integration = shapiro.test(foreigners_survey_age$integration)
+shapiro_Integration
+```
+
+
+<p>The Shapiro tests indicates a not normal distribution with a p-value of 4.4e-08, but the number of observations is sufficient to apply the central limit theorem allowing us to apply ANOVA. </p>
+
+<h4>2.2.3 Analysis ANOVA</h4>
+```{r}
+res.aov <- aov(integration ~ yearbirth, data = foreigners_survey_age)
+summary(res.aov)
+```
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for significance level = 0.05</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4>The p-value of the ANOVA test is 0.91.<br>At a significance level of 0.05 H<sub>0</sub> has to be accepted. The mean measured "Integration"-value for the 4 age groups are all equal.</h4>
+  </td>
+</tr>
+</table>
+
+<h4>2.2.4 Check for test validity</h4>
+<p>Homogeneity of the variances</p>
+```{r}
+leveneTest(integration ~ yearbirth, data = foreigners_survey_age)
+```
+
+<p> The p value is 0.92. So there is no evidence to suggest that the variance across groups is different. We can assume the homogeneity of variances.</p>
+
+```{r}
+aov_residuals <- residuals(object = res.aov)
+shapiro.test(x = aov_residuals)
+```
+
+<p> The shapiro test on the residuals is highly significant. The normality is violated. There might be a systematic error and the test results are to be questioned. </p>
+
+
+
+
+
+
+
+
+
+
+
+<h4>2.3 Formulation of the hypotheses - "Expenses"</h4>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean measured "Expenses"-value for the 4 age groups are all equal.</td>
+    <td> The mean measured "Expenses"-value for at least one of the groups differs from the others.</td>
+  </tr>
+</table></p>
+
+
+
+<h4>2.3.1 Data visualization</h4>
+```{r message=FALSE, warning=FALSE}
+ggboxplot(foreigners_survey_age, x = "yearbirth", y = "expenses", color = "yearbirth", width=0.31, varwidth=TRUE, palette = c("#00AFBB", "#E7B800", "#FC4E07", "#AE4371"), order = c(  "1935-1940", "1941-1950", "1951-1960", "1961-1970"), ylab = "expenses", xlab = "yearbirth") +
+  geom_violin(color="thistle3",fill="thistle1",alpha=0.1)+
+  labs(x = "Age", y = "Expenses", caption = "Figure 7 - Boxplot and Violinplot to check for normal distributions, Exercise 87")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+ theme_grey() + theme(plot.title = element_text(hjust = 0.5))
+```
+
+<h4>2.3.2 Prerequisites - Check for normal distribution of the variable</h4>
+```{r}
+shapiro_expenses = shapiro.test(foreigners_survey_age$expenses)
+shapiro_expenses
+```
+
+
+<p>The Shapiro tests indicates a not normal distribution with a p-value of 3e-04, but the number of observations is sufficient to apply the central limit theorem allowing us to apply ANOVA. </p>
+
+<h4>2.3.3 Analysis ANOVA</h4>
+```{r}
+res.aov <- aov(expenses ~ yearbirth, data = foreigners_survey_age)
+summary(res.aov)
+```
+
+<h4>2.3.4 Pairwise comparison between the groups</h4>
+<p>Tukey HSD (Tukey Honest Significant Differences)</p>
+```{r}
+TukeyHSD(res.aov)
+```
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for significance level = 0.05</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4>The p-value of the ANOVA test is 0.19<br>At a significance level of 0.05 H<sub>0</sub> has to be accepted. The mean measured "Expenses"-value for the 4 age groups are all equal. </h4>
+  </td>
+</tr>
+</table>
+
+<h4>2.3.5 Check for test validity</h4>
+<p>Homogeneity of the variances</p>
+```{r}
+leveneTest(expenses ~ yearbirth, data = foreigners_survey_age)
+```
+
+<p> The p value is 0.6. So there is no evidence to suggest that the variance across groups is different. We can assume the homogeneity of variances.</p>
+
+```{r}
+aov_residuals <- residuals(object = res.aov)
+shapiro.test(x = aov_residuals)
+```
+
+<p> The shapiro test on the residuals is borderline significant. The normality is violated. </p>
+
+
+***
+
+
+<h4>3. Gender<h4>
+<p>We consider two different groups and the metric variables xenophobia, integration and expenses. The student t-test will be used to find possible associations.</p>
+```{r}
+unique(foreigners_survey$sex)
+```
+
+<h4>3.1 Formulation of the hypotheses - "Xenophobia"</h4>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean measured xenophobia for the 2 gender groups are equal.</td>
+    <td> The mean measured xenophobia for the 2 gender groups are not equal.</td>
+  </tr>
+</table></p>
+
+
+
+<h4>3.1.1 Calculate unpaired t-test using R</h4>
+```{r}
+result_t_test <- t.test(xenophobia ~ sex, data=foreigners_survey)
+result_t_test
+```
+
+<p>The mean for xenophobia for female participants is 2.9103.</p> 
+<p>The mean for xenophobia for male participants is 3.2078.</p> 
+
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusion for significance level = 0.05</b></h4> </th>
+</tr>
+  <tr>
+  <td>
+  <h4>At the significance level 0.05 we conclude that H<sub>0</sub> has to be accepted. The mean measured xenophobia for the 2 gender groups are equal.</h4>
+<h4>The value of p is 0.56. </h4></td>
+  </tr>
+</table>
+
+
+
+
+<h4>3.2 Formulation of the hypotheses - "Integration"</h4>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean measured Integration-value for the 2 gender groups are equal.</td>
+    <td> The mean measured Integration-value for the 2 gender groups are not equal.</td>
+  </tr>
+</table></p>
+
+
+
+<h4>3.2.1 Calculate unpaired t-test using R</h4>
+```{r}
+result_t_test <- t.test(integration ~ sex, data=foreigners_survey)
+result_t_test
+```
+
+<p>The mean for xenophobia for female participants is 5.8205.</p> 
+<p>The mean for xenophobia for male participants is 5.6667.</p> 
+
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusion for significance level = 0.05</b></h4> </th>
+</tr>
+  <tr>
+  <td>
+  <h4>At the significance level 0.05 we conclude that H<sub>0</sub> has to be accepted. The mean measured integration-value for the 2 gender groups are equal.</h4>
+<h4>The value of p is 0.74.</h4></td>
+  </tr>
+</table>
+
+
+
+<h4>3.3 Formulation of the hypotheses - "Expenses"</h4>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean measured Expenses-value for the 2 gender groups are equal.</td>
+    <td> The mean measured Expenses-value for the 2 gender groups are not equal.</td>
+  </tr>
+</table></p>
+
+
+
+<h4>3.3.1 Calculate unpaired t-test using R</h4>
+```{r}
+result_t_test <- t.test(expenses ~ sex, data=foreigners_survey)
+result_t_test
+```
+
+<p>The mean for xenophobia for female participants is 4.6154.</p> 
+<p>The mean for xenophobia for male participants is 4.9286.</p> 
+
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusion for significance level = 0.05</b></h4> </th>
+</tr>
+  <tr>
+  <td>
+  <h4>At the significance level 0.05 we conclude that H<sub>0</sub> has to be accepted. The mean measured expenses-value for the 2 gender groups are equal.</h4>
+<h4>The value of p is 0.57. </h4></td>
+  </tr>
+</table>
+
+
+
+***
+
+<h4>4. Socio-political commitment<h4>
+<p>We consider three different groups (yes, no, uncertain) and the metric variables xenophobia, integration and expenses. The ANOVA test will be used to find possible associations. </p>
+
+```{r}
+unique(foreigners_survey$commitment)
+```
+
+<h4>4.1 Formulation of the hypotheses - "Xenophobia"</h4>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean measured xenophobia for the 3 Socio-political commitment groups are all equal.</td>
+    <td> The mean measured xenophobia for at least one of the groups differs from the others.</td>
+  </tr>
+</table></p>
+
+
+<h4>4.1.1 Data visualization</h4>
+```{r message=FALSE, warning=FALSE}
+ggboxplot(foreigners_survey, x = "commitment", y = "xenophobia", color = "commitment", width=0.31, varwidth=TRUE, palette = c("#00AFBB", "#E7B800", "#FC4E07", "#AE4371"), order = c("yes", "no", "uncertain"), ylab = "xenophobia", xlab = "commitment") +
+  geom_violin(color="thistle3",fill="thistle1",alpha=0.1)+
+  labs(x = "Socio-political commitment", y = "Xenophobia", caption = "Figure 8 - Boxplot and Violinplot to check for normal distributions, Exercise 87")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+ theme_grey() + theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+<h4>4.1.2 Analysis ANOVA</h4>
+```{r}
+res.aov <- aov(xenophobia ~ commitment, data = foreigners_survey)
+summary(res.aov)
+```
+
+<h4>4.1.3 Pairwise comparison between the groups</h4>
+<p>Tukey HSD (Tukey Honest Significant Differences)</p>
+```{r}
+TukeyHSD(res.aov)
+```
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for significance level = 0.05</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4>The p-value of the ANOVA test is 0.5.<br>At a significance level of 0.05 H<sub>0</sub> has to be accepted. The mean measured xenophobia for the 3 Socio-political commitment groups are all equal.</h4>
+  </td>
+</tr>
+</table>
+
+<h4>4.1.4 Check for test validity</h4>
+<p>Homogeneity of the variances</p>
+```{r}
+leveneTest(xenophobia ~ commitment, data = foreigners_survey)
+```
+
+<p> The p value is 0.32. So there is no evidence to suggest that the variance across groups is different. We can assume the homogeneity of variances.</p>
+
+```{r}
+aov_residuals <- residuals(object = res.aov)
+shapiro.test(x = aov_residuals)
+```
+
+<p> The shapiro test on the residuals indicates that the normality is violated.</p>
+
+
+
+
+<h4>4.2 Formulation of the hypotheses - "Integration"</h4>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean measured "Integration"-value the 3 Socio-political commitment groups are all equal.</td>
+    <td> The mean measured "Integration"-value for at least one of the groups differs from the others.</td>
+  </tr>
+</table></p>
+
+
+<h4>4.2.1 Data visualization</h4>
+```{r message=FALSE, warning=FALSE}
+ggboxplot(foreigners_survey, x = "commitment", y = "integration", color = "commitment", width=0.31, varwidth=TRUE, palette = c("#00AFBB", "#E7B800", "#FC4E07", "#AE4371"), order = c("yes", "no", "uncertain"), ylab = "Integration", xlab = "commitment") +
+  geom_violin(color="thistle3",fill="thistle1",alpha=0.1)+
+  labs(x = "Socio-political commitment", y = "Integration", caption = "Figure 9 - Boxplot and Violinplot to check for normal distributions, Exercise 87")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+ theme_grey() + theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+<h4>4.2.2 Analysis ANOVA</h4>
+```{r}
+res.aov <- aov(integration ~ commitment, data = foreigners_survey)
+summary(res.aov)
+```
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for significance level = 0.05</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4>The p-value of the ANOVA test is 0.2.<br>At a significance level of 0.05 H<sub>0</sub> has to be accepted. The mean measured "Integration"-value for the 3 Socio-political commitment groups are all equal.</h4>
+  </td>
+</tr>
+</table>
+
+<h4>4.2.3 Check for test validity</h4>
+<p>Homogeneity of the variances</p>
+```{r}
+leveneTest(integration ~ commitment, data = foreigners_survey)
+```
+
+<p> The p value is 0.23. So there is no evidence to suggest that the variance across groups is different. We can assume the homogeneity of variances.</p>
+
+```{r}
+aov_residuals <- residuals(object = res.aov)
+shapiro.test(x = aov_residuals)
+```
+
+<p> The shapiro test on the residuals is highly significant. The normality is violated. There might be a systematic error and the test results are to be questioned. </p>
+
+
+
+<h4>4.3 Formulation of the hypotheses - "Expenses"</h4>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean measured "Expenses"-value the 3 Socio-political commitment groups are all equal.</td>
+    <td> The mean measured "Expenses"-value for at least one of the groups differs from the others.</td>
+  </tr>
+</table></p>
+
+
+
+<h4>4.3.1 Data visualization</h4>
+```{r message=FALSE, warning=FALSE}
+ggboxplot(foreigners_survey, x = "commitment", y = "expenses", color = "commitment", width=0.31, varwidth=TRUE, palette = c("#00AFBB", "#E7B800", "#FC4E07", "#AE4371"), order = c("yes", "no", "uncertain"), ylab = "expenses", xlab = "commitment") +
+  geom_violin(color="thistle3",fill="thistle1",alpha=0.1)+
+  labs(x = "Socio-political commitment", y = "Expenses", caption = "Figure 10 - Boxplot and Violinplot to check for normal distributions, Exercise 87")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+ theme_grey() + theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+<h4>4.3.2 Analysis ANOVA</h4>
+```{r}
+res.aov <- aov(expenses ~ commitment, data = foreigners_survey)
+summary(res.aov)
+```
+
+<h4>4.3.3 Pairwise comparison between the groups</h4>
+<p>Tukey HSD (Tukey Honest Significant Differences)</p>
+```{r}
+TukeyHSD(res.aov)
+```
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for significance level = 0.05</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4>The p-value of the ANOVA test is 0.068 and borderline not significant.<br>At a significance level of 0.05 H<sub>0</sub> has to be accepted. The mean measured "Expenses"-value the 3 Socio-political commitment groups are all equal.</h4>
+  </td>
+</tr>
+</table>
+
+<h4>4.3.4 Check for test validity</h4>
+<p>Homogeneity of the variances</p>
+```{r}
+leveneTest(expenses ~ commitment, data = foreigners_survey)
+```
+
+<p> The p value is 0.47. So there is no evidence to suggest that the variance across groups is different. We can assume the homogeneity of variances.</p>
+
+```{r}
+aov_residuals <- residuals(object = res.aov)
+shapiro.test(x = aov_residuals)
+```
+
+<p> The shapiro test on the residuals finds indication that the normality is violated.</p>
+
+
+***
+
+<h4>5. Position in the company<h4>
+<p>We consider three different groups (Worker, Skilled worker, Employee) and the metric variables xenophobia, integration and expenses. The ANOVA test will be used to find possible associations. </p>
+
+```{r}
+unique(foreigners_survey$position)
+```
+<p> Remove missing values </p>
+```{r}
+foreigners_survey_position = na.omit(foreigners_survey[!foreigners_survey$position %in% c(" "), ])
+```
+
+
+```{r}
+unique(foreigners_survey_position$position)
+```
+
+
+<h4>5.1 Formulation of the hypotheses - "Xenophobia"</h4>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean measured xenophobia for the 3 groups of employment position are all equal.</td>
+    <td> The mean measured xenophobia for at least one of the groups differs from the others.</td>
+  </tr>
+</table></p>
+
+
+<h4>5.1.1 Data visualization</h4>
+```{r message=FALSE, warning=FALSE}
+ggboxplot(foreigners_survey_position, x = "position", y = "expenses", color = "position", width=0.31, varwidth=TRUE, palette = c("#00AFBB", "#E7B800", "#FC4E07", "#AE4371"), order = c("Worker", "Skilled worker","Employee"), ylab = "expenses", xlab = "position") +
+  geom_violin(color="thistle3",fill="thistle1",alpha=0.1)+
+  labs(x = "Position", y = "Expenses", caption = "Figure 11 - Boxplot and Violinplot to check for normal distributions, Exercise 87")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+ theme_grey() + theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+<h4>5.1.2 Analysis ANOVA</h4>
+```{r}
+res.aov <- aov(xenophobia ~ position, data = foreigners_survey_position)
+summary(res.aov)
+```
+
+<h4>5.1.3 Pairwise comparison between the groups</h4>
+<p>Tukey HSD (Tukey Honest Significant Differences)</p>
+```{r}
+TukeyHSD(res.aov)
+```
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for significance level = 0.05</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4>The p-value of the ANOVA test is highly significant at 0.0064.<br>At a significance level of 0.05 H<sub>0</sub> has to be rejected. The mean measured xenophobia for at least one of the groups differs from the others. The Tukey HSD suggests that there is a high significance between the groups "Worker-Employee" and a borderline significance between the groups "Worker-Skilled worker".</h4>
+  </td>
+</tr>
+</table>
+
+<h4>5.1.4 Check for test validity</h4>
+<p>Homogeneity of the variances</p>
+```{r}
+leveneTest(xenophobia ~ position, data = foreigners_survey_position)
+```
+
+<p> The p value is 0.17. So there is no evidence to suggest that the variance across groups is different. We can assume the homogeneity of variances.</p>
+
+```{r}
+aov_residuals <- residuals(object = res.aov)
+shapiro.test(x = aov_residuals)
+```
+
+<p> The shapiro test on the residuals indicates that the normality is violated.</p>
+
+
+
+
+<h4>5.2 Formulation of the hypotheses - "Integration"</h4>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean measured "Integration"-value the 3 groups of employment position are all equal.</td>
+    <td> The mean measured "Integration"-value for at least one of the groups differs from the others.</td>
+  </tr>
+</table></p>
+
+
+<h4>5.2.1 Data visualization</h4>
+```{r message=FALSE, warning=FALSE}
+ggboxplot(foreigners_survey_position, x = "position", y = "integration", color = "position", width=0.31, varwidth=TRUE, palette = c("#00AFBB", "#E7B800", "#FC4E07", "#AE4371"), order = c("Worker", "Skilled worker","Employee"), ylab = "Integration", xlab = "position") +
+  geom_violin(color="thistle3",fill="thistle1",alpha=0.1)+
+  labs(x = "Position in the company", y = "Integration", caption = "Figure 12 - Boxplot and Violinplot to check for normal distributions, Exercise 87")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+ theme_grey() + theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+<h4>5.2.2 Analysis ANOVA</h4>
+```{r}
+res.aov <- aov(integration ~ position, data = foreigners_survey_position)
+summary(res.aov)
+```
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for significance level = 0.05</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4>The p-value of the ANOVA test is 0.064<br>At a significance level of 0.05 H<sub>0</sub> has to be accepted. The mean measured "Integration"-value for the 3 groups of employment position are all equal.</h4>
+  </td>
+</tr>
+</table>
+
+<h4>5.2.3 Check for test validity</h4>
+<p>Homogeneity of the variances</p>
+```{r}
+leveneTest(integration ~ position, data = foreigners_survey_position)
+```
+
+<p> The p value is 0.61. So there is no evidence to suggest that the variance across groups is different. We can assume the homogeneity of variances.</p>
+
+```{r}
+aov_residuals <- residuals(object = res.aov)
+shapiro.test(x = aov_residuals)
+```
+
+<p> The shapiro test on the residuals is highly significant. The normality is violated. There might be a systematic error and the test results are to be questioned. </p>
+
+
+
+<h4>5.3 Formulation of the hypotheses - "Expenses"</h4>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean measured "Expenses"-value the 3 groups of employment position are all equal.</td>
+    <td> The mean measured "Expenses"-value for at least one of the groups differs from the others.</td>
+  </tr>
+</table></p>
+
+
+
+<h4>5.3.1 Data visualization</h4>
+```{r message=FALSE, warning=FALSE}
+ggboxplot(foreigners_survey_position, x = "position", y = "expenses", color = "position", width=0.31, varwidth=TRUE, palette = c("#00AFBB", "#E7B800", "#FC4E07", "#AE4371"), order = c("Worker", "Skilled worker","Employee"), ylab = "expenses", xlab = "position") +
+  geom_violin(color="thistle3",fill="thistle1",alpha=0.1)+
+  labs(x = "Position in the company", y = "Expenses", caption = "Figure 13 - Boxplot and Violinplot to check for normal distributions, Exercise 87")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+ theme_grey() + theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+<h4>5.3.2 Analysis ANOVA</h4>
+```{r}
+res.aov <- aov(expenses ~ position, data = foreigners_survey_position)
+summary(res.aov)
+```
+
+<h4>5.3.3 Pairwise comparison between the groups</h4>
+<p>Tukey HSD (Tukey Honest Significant Differences)</p>
+```{r}
+TukeyHSD(res.aov)
+```
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for significance level = 0.05</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4>The p-value of the ANOVA test is 0.0087.<br>At a significance level of 0.05 H<sub>0</sub> has to be rejected. The mean measured expenses-value for at least one of the groups differs from the others. The Tukey HSD suggests that there is a high significance between the groups "Worker-Employee".</h4>
+  </td>
+</tr>
+</table>
+
+<h4>5.3.4 Check for test validity</h4>
+<p>Homogeneity of the variances</p>
+```{r}
+leveneTest(expenses ~ position, data = foreigners_survey_position)
+```
+
+<p> The p value is 0.37. So there is no evidence to suggest that the variance across groups is different. We can assume the homogeneity of variances.</p>
+
+```{r}
+aov_residuals <- residuals(object = res.aov)
+shapiro.test(x = aov_residuals)
+```
+
+<p> The shapiro test on the residuals finds no indication that the normality is violated.</p>
+
+
+***
+
+<h2> Overall Results</h2>
+
+<p><table>
+  <tr>
+    <th><b>Significant associations found using Anova and student t-test</b></th>
+  </tr>
+  <tr>
+    <td>The mean measured xenophobia for the groups "Satisfaction with own ecosituation" showed a significant difference between the groups “yes-no” (padj = 0.00372) and “yes-uncertain” (padj = 0.00725). The measured Xenophobia was significantly lower in the group that was satisfied with their own economic situation. </td>
+      <tr>
+    <td>The mean measured opinion on Expenses on foreigners for the groups "Satisfaction with own ecosituation" showed a significant difference between the groups “yes-uncertain” (padj = 0.00399) The measured negative opinion on expenses on foreigners was significantly lower in the group that was satisfied with their own economic situation. </td>
+      </tr>
+      <tr>
+  <td>The mean measured xenophobia shows a high significance between the "Position in the company"-groups “Worker-Employee” (padj = 0.00480) and a borderline significance between the groups “Worker-Skilled worker” (padj= 0.50039). The measured Xenophobia was significantly lower among the participants having higher positions in the company.   
+  </td>
+  </tr>
+  <tr>
+  <td>The mean measured negative opinion on expenses for foreigners shows a high significance between the "Position in the company"-groups “Worker-Employee” (padj = 0.00605). The measured negative opinion on expenses for foreigners was significantly lower among the participants having higher positions in the company.   
+  </td>
+  </tr>
+</table></p>
+
+

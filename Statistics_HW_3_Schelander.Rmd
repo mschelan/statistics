@@ -1,0 +1,258 @@
+---
+title: "APPDS - Statistics"
+subtitle: "HW 3 - 2022/11/10 - Schelander Martina"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+Prerequisites - Load libraries
+```{r message=FALSE, warning=FALSE}
+library(mosaic)
+```
+
+
+
+### Exercise 29
+
+#### An engine produces wooden staff with a length of µ = 1.2 m and a standard deviation of σ = 2 cm. The length of the wooden staff follows a normal distribution. 
+
+#### Probability that the length of a randomly selected staff lies between 1175 mm and 1195 mm.
+
+```{r message=FALSE, warning=FALSE}
+ex29_mean=1200
+ex29_sd=20
+lower <- pnorm(1175, ex29_mean, ex29_sd)
+upper <- pnorm(1195, ex29_mean, ex29_sd)
+prop <- upper - lower
+ex29_pct_value <- round(prop*100,2) 
+answer <- paste('The probability that the length of a randomly selected staff lies between 1175mm and 1195mm is',ex29_pct_value,'%') 
+answer
+```
+
+#### Visualization 
+
+```{r message=FALSE, warning=FALSE}
+colranges<-"orangered"
+col_s_mu<-"lightsteelblue3"
+
+xpnorm(c(1175, 1195),ex29_mean, ex29_sd, verbose = FALSE, xlab="Staff length in mm",
+     ylab="Density", title = "Staff length between 1175mm and1195 mm", return = "plot") %>%
+  gf_refine(
+  scale_fill_manual( values = alpha(c("lightblue1", "lightcoral", "lightblue2"), 0.8), labels = c("smaller than 1175", "between 1175 and 1195", "greater than 1195"), name = "Ranges (length in mm)"))+
+  annotate("segment", x = 1175, xend = 1175, y = 0, yend = 0.02, colour = colranges)+
+  annotate("segment", x = 1195, xend = 1195, y = 0, yend = 0.02, colour = colranges)+
+  annotate("text",x=1175,y=0.022,label="1175 ",angle=90, colour = colranges)+
+  annotate("text",x=1195,y=0.022,label="1195 ",angle=90, colour = colranges)+
+  annotate("segment", x = ex29_mean, xend = ex29_mean, y = 0, yend = 0.01995, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex29_mean + 1),y=-0.0005,label="μ", colour = col_s_mu)+
+  annotate("segment", x = ex29_mean - ex29_sd, xend = ex29_mean - ex29_sd, y = 0, yend = 0.012, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex29_mean - ex29_sd - 1),y=-0.0005,label="-1σ", colour = col_s_mu)+
+  annotate("segment", x = ex29_mean + ex29_sd, xend = ex29_mean + ex29_sd, y = 0, yend = 0.012, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex29_mean + ex29_sd - 1),y=-0.0005,label="1σ", colour = col_s_mu)+
+  annotate("text",x=(1185),y=0.0055,angle=90,label=paste(ex29_pct_value,"%"))
+```
+
+#### Probability that the length of a randomly selected staff is longer than 1190 mm.
+
+```{r message=FALSE, warning=FALSE}
+lower <- pnorm(1190, ex29_mean, ex29_sd)
+value <- round((1-lower)*100,2)
+answer <- paste('The probability that the length of a randomly selected staff is longer than 1190 mm is',value,'%') 
+answer
+
+```
+
+#### Visualization 
+
+```{r message=FALSE, warning=FALSE}
+colranges<-"orangered"
+col_s_mu<-"lightsteelblue"
+
+xpnorm(c(0,1190),ex29_mean, ex29_sd, verbose = FALSE, xlab= "Staff length in mm",
+     ylab="Density", title = "Staff length longer than 1190 mm", return = "plot") %>%
+  gf_refine(
+  scale_fill_manual(values = alpha(c("lightblue2", "lightcoral"), 0.8), labels = c("smaller than 1190", "greather than 1190"), name = "Ranges (length in mm)"))+
+  annotate("segment", x = 1190, xend = 1190, y = 0, yend = 0.02, colour = colranges, linetype=1)+
+  annotate("text",x=1190,y=0.022,label="1190 ",angle=90, colour = colranges)+
+  annotate("segment", x = ex29_mean, xend = ex29_mean, y = 0, yend = 0.01995, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex29_mean + 2 - 1),y=-0.0005,label="μ", colour = col_s_mu)+
+  annotate("segment", x = ex29_mean - ex29_sd, xend = ex29_mean - ex29_sd, y = 0, yend = 0.012, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex29_mean - ex29_sd - 1),y=-0.0005,label="-1σ", colour = col_s_mu)+
+  annotate("segment", x = ex29_mean + ex29_sd, xend = ex29_mean + ex29_sd, y = 0, yend = 0.012, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex29_mean + ex29_sd - 1),y=-0.0005,label="1σ", colour = col_s_mu)+
+  annotate("text",x=(1210),y=0.0055,label=paste(value,"%"))
+
+```
+
+
+#### Probability that the length of a randomly selected staff shows a maximal deviation of 10 mm for the expectation.
+
+```{r message=FALSE, warning=FALSE}
+upper <- pnorm(1210, ex29_mean, ex29_sd)
+lower <- pnorm(1190, ex29_mean, ex29_sd)
+prop <- upper - lower
+pct_value <- round(prop*100,2)
+answer <- paste('The probability that the length of a randomly selected staff shows a maximal deviation of 10 mm for the expectation is',pct_value,'%') 
+answer
+```
+
+```{r message=FALSE, warning=FALSE}
+colranges<-"orangered"
+col_s_mu<-"lightsteelblue"
+
+xpnorm(c(1190, 1210),ex29_mean, ex29_sd, verbose = FALSE, xlab= "Staff length in mm",
+     ylab="Density", title = "Staff length shows a maximal deviation of 10 mm", return = "plot") %>%
+  gf_refine(
+  scale_fill_manual( values = alpha(c("lightblue1", "lightcoral", "lightblue2"), 0.8), labels = c("smaller than 1190", "between 1190 and 1210", "greater than 1210"), name = "Ranges (length in mm)")) +
+  annotate("segment", x = 1190, xend = 1190, y = 0, yend = 0.02, colour = colranges, linetype=1)+
+  annotate("segment", x = 1210, xend = 1210, y = 0, yend = 0.02, colour = colranges, linetype=1)+
+  annotate("text",x=1190,y=0.022,label="1190 ",angle=90, colour = colranges)+
+  annotate("text",x=1210,y=0.022,label="1210 ",angle=90, colour = colranges)+
+  annotate("segment", x = ex29_mean, xend = ex29_mean, y = 0, yend = 0.01995, colour = alpha(col_s_mu,0.5), linetype=2)+
+  annotate("text",x=(ex29_mean + 2 - 1),y=-0.0005,label="μ", colour = col_s_mu)+
+  annotate("segment", x = ex29_mean - ex29_sd, xend = ex29_mean - ex29_sd, y = 0, yend = 0.012, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex29_mean - ex29_sd - 1),y=-0.0005,label="-1σ", colour = col_s_mu)+
+  annotate("segment", x = ex29_mean + ex29_sd, xend = ex29_mean + ex29_sd, y = 0, yend = 0.012, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex29_mean + ex29_sd - 1),y=-0.0005,label="1σ", colour = col_s_mu)+
+  annotate("text",x=(ex29_mean),y=0.008,angle=90,label=paste(pct_value,"%"))
+```
+
+***
+
+
+## Exercise 30
+
+#### An engine produces metal plates with a thickness of µ = 5 mm and a standard deviation of sigma = 0.3 mm. The thickness of the metal plates follows a normal distribution.
+
+#### How many plates are useless, because their thickness is below 4.4 mm?
+
+```{r message=FALSE, warning=FALSE}
+ex30_mean<-5
+ex30_sd<-0.3
+value <- round(pnorm(4.4, ex30_mean, ex30_sd)*100, 2)
+answer <- paste(value,"% of the plates are useless, because their thickness is below 4.4 mm.")
+answer
+```
+
+ 
+```{r message=FALSE, warning=FALSE}
+colranges<-"orangered"
+col_s_mu<-"darkolivegreen4"
+
+xpnorm(c(0,4.4), ex30_mean, ex30_sd, verbose = FALSE, xlab= "Plate thickness in mm",
+     ylab="Density", title = "Thickness is below 4.4mm", return = "plot") %>%
+  gf_refine(scale_fill_manual( values = alpha(c("indianred1", "olivedrab3"), 0.8), labels = c("below 4.4mm", "above 4.4mm"), name = "Thinkness in mm")) +
+  annotate("segment", x = 4.4, xend = 4.4, y = 0, yend = 0.5, colour = colranges, linetype=1)+
+  annotate("text",x=4.4,y=0.6,label="4.4 ",angle=90, colour = colranges)+
+  annotate("segment", x = ex30_mean, xend = ex30_mean, y = 0, yend = 1.33, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex30_mean),y=-0.05,label="μ", colour = col_s_mu)+
+  annotate("segment", x = ex30_mean - ex30_sd, xend = ex30_mean - ex30_sd, y = 0, yend = 0.8, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex30_mean - ex30_sd),y=-0.05,label="-1σ", colour = col_s_mu)+
+  annotate("segment", x = ex30_mean + ex30_sd, xend = ex30_mean + ex30_sd, y = 0, yend = 0.8, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex30_mean + ex30_sd),y=-0.05,label="1σ", colour = col_s_mu)+
+  annotate("text",x=(4.25),y=0.2,label=paste(value,"%"))
+```
+
+
+#### How many plates are useless, because their thickness is above 5.4 mm?
+
+```{r message=FALSE, warning=FALSE}
+value = round(pnorm(5.4, ex30_mean, ex30_sd, lower.tail = FALSE)*100, 2)
+answer <- paste(value,"% of the plates are useless, because their thickness is above 5.4 mm.")
+answer
+```
+
+
+```{r message=FALSE, warning=FALSE}
+colranges<-"orangered"
+col_s_mu<-"darkolivegreen4"
+
+xpnorm(c(5.4,0), ex30_mean, ex30_sd, verbose = FALSE, xlab= "Plate thickness in mm",
+     ylab="Density", title = "Thickness is above 5.4mm", return = "plot") %>%
+  gf_refine(scale_fill_manual( values = alpha(c("olivedrab3", "indianred1"), 0.8), labels = c("below 5.4mm", "above 5.4mm"), name = "Thinkness in mm")) +
+  annotate("segment", x = 5.4, xend = 5.4, y = 0, yend = 0.8, colour = colranges, linetype=1)+
+  annotate("text",x=5.4,y=0.9,label="5.4 ",angle=90, colour = colranges)+
+  annotate("segment", x = ex30_mean, xend = ex30_mean, y = 0, yend = 1.33, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex30_mean),y=-0.05,label="μ", colour = col_s_mu)+
+  annotate("segment", x = ex30_mean - ex30_sd, xend = ex30_mean - ex30_sd, y = 0, yend = 0.8, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex30_mean - ex30_sd),y=-0.05,label="-1σ", colour = col_s_mu)+
+  annotate("segment", x = ex30_mean + ex30_sd, xend = ex30_mean + ex30_sd, y = 0, yend = 0.8, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex30_mean + ex30_sd),y=-0.05,label="1σ", colour = col_s_mu)+
+  annotate("text",x=(5.55),y=0.1,label=paste(value,"%"))
+```
+
+***
+
+
+
+### Exercise 32
+
+#### A certain population has an IQ (intelligence quotient) of µ = 100 with a standard deviation of sigma = 15. The IQ follows a normal distribution.
+
+#### What is the range of the IQ of 95% of the population?
+
+```{r message=FALSE, warning=FALSE}
+ex32_mean <- 100
+ex32_sd <- 15
+lower <- (1 - 0.95) / 2
+upper <- (1 - 0.95) / 2 + 0.95
+pct95_range <- c(qnorm(lower, ex32_mean, ex32_sd), qnorm(upper, ex32_mean, ex32_sd))
+paste("The 95% range of the population ranges from an IQ of",round(pct95_range[1],0),"to an IQ of", round(pct95_range[2],0))
+
+```
+
+#### To get a leading position, you need an IQ of more than 120. What is the percentage of people, who are not qualified for a leading position?
+
+```{r message=FALSE, warning=FALSE}
+value_under_120 <- round(pnorm(120, ex32_mean, ex32_sd)*100,2)
+paste(value_under_120, "% of people are not qualified for a leading position according to their IQ level")
+```
+
+
+```{r message=FALSE, warning=FALSE}
+colranges<-"orangered"
+col_s_mu<-"coral3"
+
+xpnorm(c(0,120), ex32_mean, ex32_sd, verbose = FALSE, xlab= "IQ range",
+     ylab="Density", title = "People with IQ lower than 120", return = "plot") %>%
+  gf_refine(scale_fill_manual( values = alpha(c("indianred1", "olivedrab3"), 0.8), labels = c("below 120", "above 120"), name = "IQ Level")) +
+  annotate("segment", x = 120, xend = 120, y = 0, yend = 0.02, colour = colranges, linetype=1)+
+  annotate("text",x=120,y=0.022,label="120 ",angle=90, colour = colranges)+
+  annotate("segment", x = ex32_mean, xend = ex32_mean, y = 0, yend = 0.0265, colour = alpha(col_s_mu,0.5), linetype=2)+
+  annotate("text",x=(ex32_mean),y=-0.0005,label="μ", colour = col_s_mu)+
+  annotate("segment", x = ex32_mean - ex32_sd, xend = ex32_mean - ex32_sd, y = 0, yend = 0.0155, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex32_mean - ex32_sd),y=-0.0005,label="-1σ", colour = col_s_mu)+
+  annotate("segment", x = ex32_mean + ex32_sd, xend = ex32_mean + ex32_sd, y = 0, yend = 0.0155, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex32_mean + ex32_sd),y=-0.0005,label="1σ", colour = col_s_mu)+
+  annotate("text",x=(ex32_mean),y=0.01,label=paste(value_under_120,"%"))
+```
+
+#### What is the minimum IQ to belong to 5% of the most intelligent persons?
+
+```{r message=FALSE, warning=FALSE}
+value <- qnorm(0.95, ex32_mean, ex32_sd)
+paste("To belong to the top 5% one has to have an IQ of at least", round(value))
+
+```
+
+```{r message=FALSE, warning=FALSE}
+colranges<-"orangered"
+col_s_mu<-"darkolivegreen4"
+
+xqnorm(c(0.95,0), ex32_mean, ex32_sd, verbose = FALSE, xlab= "IQ range",
+     ylab="Density", title = "Top 5% IQ range", return = "plot") %>%
+  gf_refine(scale_fill_manual( values = alpha(c("olivedrab3", "indianred1"), 0.8), labels = c("lower 95%", "top 5%"), name = "IQ Level")) +
+  annotate("segment", x = value, xend = value, y = 0, yend = 0.02, colour = colranges, linetype=1)+
+  annotate("text",x=value,y=0.022,label=paste(round(value)," "),angle=90, colour = colranges)+
+  annotate("segment", x = ex32_mean, xend = ex32_mean, y = 0, yend = 0.0265, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex32_mean),y=-0.0005,label="μ", colour = col_s_mu)+
+  annotate("segment", x = ex32_mean - ex32_sd, xend = ex32_mean - ex32_sd, y = 0, yend = 0.0155, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex32_mean - ex32_sd),y=-0.0005,label="-1σ", colour = col_s_mu)+
+  annotate("segment", x = ex32_mean + ex32_sd, xend = ex32_mean + ex32_sd, y = 0, yend = 0.0155, colour = col_s_mu, linetype=2)+
+  annotate("text",x=(ex32_mean + ex32_sd),y=-0.0005,label="1σ", colour = col_s_mu)+
+  annotate("text",x=(value + 5),y=0.0015,label="5%")
+```
+
+

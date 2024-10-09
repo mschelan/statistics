@@ -1,0 +1,491 @@
+---
+title: "APPDS - Statistics"
+subtitle: "HW 7 - 2022/12/09 - Schelander Martina"
+output:
+  html_document:
+    df_print: paged
+---
+
+<h2> Table of Contents </h2> 
+<ol>
+    <li>
+      <a href="#Exercise_85">
+      <span class="title">Exercise 85</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_86">
+      <span class="title">Exercise 86</span>
+      </a>
+    </li>
+</ol>
+
+<style>
+table, th, td {
+  border:1px solid black;
+  padding: 4px;
+}
+tr:nth-child(odd) {
+  background-color: #E6F6F669;
+}
+th{
+  background-color: #D6EEEE;
+}
+</style>
+
+
+Prerequisites - Load libraries
+```{r message=FALSE, warning=FALSE}
+library(knitr)
+library(klaR)
+library(ggord)
+library(psych)
+library(MASS)
+library(devtools)
+library(tidyverse)
+library(caret)
+library(mosaic)
+library(dplyr)
+library(ggplot2)
+library(GGally)
+```
+
+***
+
+<h2 id="Exercise_85"> Exercise 85 - Outcome of lung ventilation </h2>
+<p>Use the dataset „Discriminant-pulmonary.txt“
+<br>Contains diverse parameters on patients receiving lung ventilation
+<br>- Age
+<br>- Oxygen concentration in blood
+<br>- Body size
+<br>- Aggressiveness of the ventilation
+<br>- Ventilation time
+<br>Not all patients survived. Can you predict, based on these parameters, whether a patient will survive or not?
+<br>Also try standardization of variables!
+</p>
+
+<h3> Study Objective</h3>
+<p><table>
+  <tr>
+    <th><b> Predict whether a patient will survive or not </b></th>
+  </tr>
+  <tr>
+    <td> Parameters available: 
+<br>- Age
+<br>- Oxygen concentration in blood
+<br>- Body size
+<br>- Aggressiveness of the ventilation
+<br>- Ventilation time</td>
+  </tr>
+</table></p>
+
+<h3>1. Load and inspect the data</h3>
+```{r}
+pulmonary<-read.delim("C:\\FH APPDS\\Skripten und HÜ\\Statistics\\HW\\Datasets-20221012\\Discriminant-pulmonary.txt",stringsAsFactors=F)
+str(pulmonary)
+summary(pulmonary)
+pulmonary$outcome <- as.factor(pulmonary$outcome)
+```
+
+<h4> 2. Visualize using a Pairs Plot for the variables</h4>
+```{r fig.align="center", fig.cap = "Pairs panel plot - Excercise 85"}
+pairs.panels(pulmonary[2:6], density=TRUE, gap = 0,bg = c()[pulmonary$outcome],pch = 20, cex=0.8, main = "Pairs plot")  
+```
+
+
+
+
+<h3>3. Define training and test dataset (70% Training and 30% Test)</h3>
+```{r}
+set.seed(123)
+ind = sample(2, nrow(pulmonary),replace = TRUE,prob = c(0.7, 0.3))
+training <- pulmonary[ind==1,]
+testing <- pulmonary[ind==2,]
+
+```
+
+<h3>4a. Define LDA model - Linear model</h3>
+```{r}
+linear <- lda(outcome~., training)
+linear
+```
+<p><table>
+  <tr>
+    <th><b>Coefficients of the linear discriminants</b></th>
+  </tr>
+  <tr>
+    <td> LD = <br> -0.008 * age -2.164 * oxygen.conc + 0.031 * body.size - 0.05 * ventilation.aggressiveness -0.089 * ventilation.time</td>
+  </tr>
+</table></p>
+
+<h3>4b. Define LDA model - Quadratic model</h3>
+
+```{r}
+quadratic <- qda(outcome~., data = training)
+quadratic
+```
+
+
+<h4>5. Predict survival using the training set</h4>
+```{r}
+p <- predict(linear, training)
+
+predquad <- predict(quadratic, training)
+```
+
+<h4>Predicted terminal classes </h4>
+```{r}
+head(p$class, 10)
+```
+
+
+<h4>Predicted probabilities of class membership</h4>
+```{r}
+head(p$posterior, 10)
+```
+
+<h4>Linear discriminants<h4>
+```{r}
+head(p$x, 10)
+```
+
+<h3>6. Visualization of the results</h3>
+
+<h3>Stacked Histogram</h3>
+```{r fig.align="center", fig.cap = "Stacked histogram plot - Excercise 85"}
+ldahist(data = p$x[,1], g = training$outcome)
+```
+
+
+<p>There are complete overlaps visible between the groups which is a not prefered solution.</p>
+
+
+<h3>Correct classifications for training set</h3>
+
+<p>Prediction for training set with linear model </p>
+```{r}
+p1 <- predict(linear, training)$class
+tab <- table(Predicted = p1,Actual = training$outcome)
+tab
+sum(diag(tab))/sum(tab)
+
+```
+
+
+<p>Prediction for training set with quadratic model </p>
+```{r}
+pq1 <- predict(quadratic, training)$class
+tab <- table(Predicted = pq1,Actual = training$outcome)
+tab
+sum(diag(tab))/sum(tab)
+
+```
+
+
+<h3>Correct classifications for testing set</h3>
+
+<p>Prediction for testing set with linear model </p>
+```{r}
+p2 <- predict(linear, testing)$class 
+tab1 <- table(Predicted = p2,Actual = testing$outcome)
+tab1
+sum(diag(tab1))/sum(tab1)
+
+```
+
+<p>Prediction for testing set with quadratic model </p>
+```{r}
+pq2 <- predict(quadratic, testing)$class
+tab1 <- table(Predicted = pq2,Actual = testing$outcome)
+tab1
+sum(diag(tab1))/sum(tab1)
+
+```
+
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for not standardized variables</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <p>According to the confusion matrix the prediction results on the training data set were worse for the linear (0.6808511) and better for the quadratic (0.7446809) model. </p>
+    <p>The prediction results on the test data set were similar for the quadratic model (0.6756757) and the linear model (0.6756757)</p>
+    <p> As seen in the histogram plot, the two groups have complete overlapping sections which leads to not optimal prediction results. But prediction accuracy of 68% on testing and 67% on training data is still quite good.</p>
+  </td>
+</tr>
+</table>
+
+
+
+<h3>A1 Create model using scaled variables</h3>
+
+```{r}
+pulmonary <- pulmonary %>% mutate(age = scale(age))
+pulmonary <- pulmonary %>% mutate(oxygen.conc = scale(oxygen.conc))
+pulmonary <- pulmonary %>% mutate(body.size = scale(body.size))
+pulmonary <- pulmonary %>% mutate(ventilation.aggressiveness = scale(ventilation.aggressiveness))
+pulmonary <- pulmonary %>% mutate(ventilation.time = scale(ventilation.time))
+pulmonary
+```
+
+
+<h3>A2 Define training and test dataset (70% Training and 30% Test)</h3>
+```{r}
+set.seed(123)
+ind = sample(2, nrow(pulmonary),replace = TRUE,prob = c(0.7, 0.3))
+training <- pulmonary[ind==1,]
+testing <- pulmonary[ind==2,]
+
+```
+
+<h3>4a. Define LDA model - Linear model</h3>
+```{r}
+linear <- lda(outcome~., training)
+linear
+```
+<p><table>
+  <tr>
+    <th><b>Coefficients of the linear discriminants</b></th>
+  </tr>
+  <tr>
+    <td> LD = <br> -0.10 * age -0.33 * oxygen.conc + 0.43 * body.size - 0.52 * ventilation.aggressiveness - 0.75 * ventilation.time</td>
+  </tr>
+</table></p>
+
+
+
+<h4>5. Predict survival using the training set</h4>
+```{r}
+p <- predict(linear, training)
+```
+
+<h3>6. Visualization of the results</h3>
+
+<h3>Stacked Histogram</h3>
+```{r fig.align="center", fig.cap = "Stacked histogram plot - Excercise 85"}
+ldahist(data = p$x[,1], g = training$outcome)
+```
+
+
+
+<h3>Correct classifications for training set</h3>
+
+<p>Prediction for training set with linear model </p>
+```{r}
+p1 <- predict(linear, training)$class
+tab <- table(Predicted = p1,Actual = training$outcome)
+tab
+sum(diag(tab))/sum(tab)
+
+```
+
+<h3>Correct classifications for testing set</h3>
+
+<p>Prediction for testing set with linear model </p>
+```{r}
+p2 <- predict(linear, testing)$class 
+tab1 <- table(Predicted = p2,Actual = testing$outcome)
+tab1
+sum(diag(tab1))/sum(tab1)
+
+```
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for standardized variables</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <p>Both standardized variables and not standardized variables show smiliar results. For standardized: On training data (0.6808511), on testing data (0.6756757). </p>
+  </td>
+</tr>
+</table>
+
+
+
+
+***
+<h2 id="Exercise_86"> Exercise 86 - Determining the sex of birds</h2>
+<p>In bird species where males and females are coloured the same, it is usually difficult to determine sex on the basis of external characteristics such as size or behaviour.Therefore, either an endoscopic examination of the internal reproductive organs or a blood sample must be taken.Both procedures put the animals under a lot of stress, so they usually take place under general anaesthesia, which can also affect the birds’ health.In addition, analysing the blood for hormone status or certain genetic traits is costly and requires specialist staff.
+<br>The aim of this study is to establish a discriminant function for sex determination using data from 245 birds, most of which have known sex.
+<br>The following research questions need to be answered:
+<br>1. What is the discriminant function?
+<br>2. How many birds can be correctly assigned to their sex with this?
+<br>3. How many of the birds whose sex is unknown can still be assigned to a sex?
+</p>
+
+<h3> Study Objective </h3>
+<p><table>
+  <tr>
+    <th><b> Determining the sex of birds </b></th>
+  </tr>
+  <tr>
+    <td> The aim of this study is to determine the sex of the birds based on the characteristics of wing length, beak length, head length, foot length and weight.</td>
+  </tr>
+</table></p>
+
+<p>Load and inspect the data</p>
+```{r}
+birds<-read.delim("C:\\FH APPDS\\Skripten und HÜ\\Statistics\\HW\\Datasets-20221012\\Discriminant-birds.txt",stringsAsFactors=F)
+str(birds)
+summary(birds)
+unique(birds$sex)
+inspect(birds)
+birds$sex <- as.factor(birds$sex)
+```
+
+
+<p>Pairs plot for the variables</p>
+```{r fig.align="center", fig.cap = "Pairs panel plot - Excercise 86"}
+pairs.panels(birds[2:6], density=TRUE, gap = 0,bg = c()[birds$sex],pch = 20, cex = 0.8, main = "Pairs plot")  
+```
+
+
+
+
+<h3>3. Define training and test dataset 70%training / 30%test</h3>
+
+<h4> Devide known and unknown data <h4>
+```{r}
+birds_known = data.frame(subset(birds, !(sex == 'unknown')))
+birds_unknown = data.frame(subset(birds, (sex == 'unknown')))
+
+set.seed(123)
+ind = sample(2, nrow(birds),replace = TRUE,prob = c(0.7, 0.3))
+training <- birds[ind==1,]
+testing <- birds[ind==2,]
+
+```
+
+<h3>4a. Define LDA model - Linear model</h3>
+```{r}
+linear <- lda(sex~., training)
+linear
+```
+<p><table>
+  <tr>
+    <th><b>Coefficients of the linear discriminants LD1</b></th>
+    <th><b>Coefficients of the linear discriminants LD2</b></th>
+  </tr>
+  <tr>
+    <td> LD1 = <br>0.02 * wing - 0.25 * beak - 0.21 * head - 0.013 * food -0.004 * weight </td>
+    <td> LD2 = <br>0.09 * wing + 0.18 * beak - 0.10 * head - 0.08 * food - 0.02 * weight </td>
+  </tr>
+</table></p>
+
+
+<h3>5. Predict survival using the training set</h3>
+```{r}
+p <- predict(linear, training)
+```
+
+<p>Linear discriminants<p>
+```{r}
+head(p$x, 10)
+```
+
+<h3>6. Visualization of the results</h3>
+<p>Stacked Histogram for LD1</P>
+```{r fig.align="center", fig.cap = "Stacked histogram plot LD1 - Excercise 86"}
+ldahist(data = p$x[,1], g = training$sex)
+```
+<p>Stacked Histogram for LD1</P>
+```{r fig.align="center", fig.cap = "Stacked histogram plot LD1 - Excercise 86"}
+ldahist(data = p$x[,2], g = training$sex)
+```
+
+<p>The stacked histogram for LD1 shows almost no overlaps between group male and female. LD2 shows an unfavourable result as all three groups have clear overlaps.</p>
+
+```{r fig.align="center", fig.cap = "LDA plot - Excercise 86"}
+lda.data <- cbind(training, predict(linear)$x)
+ggplot(lda.data, aes(LD1, LD2)) + geom_point(aes(color = sex))+ ggtitle("LDA Plot - Birds")+theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r fig.align="center", fig.cap = "Biplot - Excercise 86", warning=FALSE}
+ggord(linear, training$sex,ylim = c(-3, 3))
+```
+
+```{r fig.align="center", fig.cap = "Partitionplot - Excercise 86", warning=FALSE}
+partimat(sex~., data = training, method = "lda")
+
+```
+
+
+
+
+<h3>Correct classifications for training set</h3>
+
+<p>Prediction for training set with linear model </p>
+```{r}
+p1 <- predict(linear, training)$class
+tab <- table(Predicted = p1,Actual = training$sex)
+tab
+sum(diag(tab))/sum(tab)
+
+```
+<p>According to the confusion matrix the prediction results on the training data set were  0.75.</p>
+
+
+<h3>Correct classifications for testing set</h3>
+
+<p>Prediction for testing set with linear model </p>
+```{r}
+p2 <- predict(linear, testing)$class 
+tab1 <- table(Predicted = p2,Actual = testing$sex)
+tab1
+sum(diag(tab1))/sum(tab1)
+
+```
+<p>The prediction accuracy results on the testing set were 0.6461538.</p>
+
+
+
+<h3>Conclusions</h3>
+<table>
+  <tr> 
+    <th><h4><b> Discriminant Function LD1</b></h4> </th>
+    <th><h4><b> Discriminant Function LD2</b></h4> </th>
+    <th><h4><b> Number of birds correctly assigned</b></h4> </th>
+    <th><h4><b> Number of birds whose sex is unknown that can be assigned </b></h4> </th>
+</tr>
+<tr>
+   <td> <p>LD1 = <br>0.02 * wing - 0.25 * beak - 0.21 * head - 0.013 * food -0.004 * weight </p></td>
+   <td> <p>LD2 = <br>0.09 * wing + 0.18 * beak - 0.10 * head - 0.08 * food - 0.02 * weight </p></td>
+  <td>
+    <p>The correctly assigned prediction rate for birds is 75% on training and 64% on testing data. </p>
+  </td>
+    <td>
+    <p> 123 birds in the complete dataset had unknown sex that can still be assigned.</p>
+  </td>
+</tr>
+</table>
+
+
+<h3> Create a model without the birds with unknown sex and then apply the model on the unknown dataset</h3>
+
+```{r}
+set.seed(123)
+ind = sample(2, nrow(birds_known),replace = TRUE,prob = c(0.7, 0.3))
+training <- birds_known[ind==1,]
+testing <- birds_known[ind==2,]
+
+linear <- lda(sex~., training)
+linear
+
+p <- predict(linear, training)
+
+p1 <- predict(linear, birds_unknown)$class
+tab <- table(Predicted = p1,Actual = birds_unknown$sex)
+```
+
+<h3> Prediction results for the unknown dataset </h3>
+```{r}
+tab
+```
+
+
+***
+
+

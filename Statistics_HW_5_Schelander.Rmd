@@ -1,0 +1,981 @@
+---
+title: "APPDS - Statistics"
+subtitle: "HW 5 - 2022/11/24 - Schelander Martina"
+output:
+  html_document:
+    df_print: paged
+---
+<h2> Table of Contents </h2> 
+<ol>
+    <li>
+      <a href="#Exercise_53">
+      <span class="title">Exercise 53</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_54">
+      <span class="title">Exercise 54</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_56">
+      <span class="title">Exercise 56</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_57">
+      <span class="title">Exercise 57</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_58">
+      <span class="title">Exercise 58</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_60">
+      <span class="title">Exercise 60</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_61">
+      <span class="title">Exercise 61</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_63">
+      <span class="title">Exercise 63</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_64">
+      <span class="title">Exercise 64</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_66">
+      <span class="title">Exercise 66</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_67">
+      <span class="title">Exercise 67</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_68">
+      <span class="title">Exercise 68</span>
+      </a>
+    </li>
+</ol>
+
+<style>
+table, th, td {
+  border:1px solid black;
+  padding: 4px;
+}
+tr:nth-child(odd) {
+  background-color: #E6F6F669;
+}
+th{
+  background-color: #D6EEEE;
+}
+</style>
+
+
+Prerequisites - Load libraries
+```{r message=FALSE, warning=FALSE}
+library(mosaic)
+library(knitr)
+library(dplyr)
+library(ggpubr)
+library(gridExtra)
+```
+
+***
+
+<h2 id="Exercise_53"> Exercise 53 </h2>
+<p>Use the dataset ’ICM’.
+<br>Without assuming the data to have normal distribution,decide at .05 significance level if the negative mood of students has identical data distributions depending on the social media use.</p>
+
+```{r message=FALSE, warning=FALSE}
+ICM<-read.delim("C:\\_Privat\\_MSC_\\Skripten und Hü\\Statistics\\HW\\Datasets-20221012\\ICM.txt",stringsAsFactors=F)
+```
+
+<h3>Exploratory Analysis</h3>
+<p>We start with an exploratory data analysis of the dataset ICM and values of 'NegativeMood' and levels of 'Socialmediahours'</p>
+```{r}
+str(ICM)
+head(ICM)
+inspect(ICM$NegativeMood)
+inspect(ICM$Socialmediahours)
+unique(ICM$Socialmediahours)
+```
+
+<p>We learn that we have a total of 199 rows, 4 different categories for the 'Socialmediahours' and metric values for the 'NegativeMood', but 5 values for the 'NegativeMood' attribute are missing. </p>  
+
+
+<h3>Data Visualization</h3>
+
+```{r message=FALSE, warning=FALSE}
+ggplot(ICM, aes(Socialmediahours, NegativeMood))+ ggtitle("Boxplot/Violinplot for Socialmedia Hours ~ Negative Mood")+
+  geom_violin(color="orchid3",fill="lightpink",alpha=0.1)+
+  labs(x = "Socialmedia Hours", y = "Negative Mood", caption = "Figure 1 - Boxplot and Violinplot to compare distributions, Exercise 53")+
+  geom_boxplot(width=0.28, varwidth=TRUE,color="royalblue3",fill="lightblue3",
+               alpha=0.4,outlier.colour="red",outlier.fill="red",outlier.size=3)+theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+<h3> Approach </h3> 
+<p>We compare the 'NegativeMood' for 4 independent groups of 'Socialmediahours', not assuming a normal distribution of the samples. We choose the non-parametric Kruskal-Wallis test.</p>
+
+<h3> Formulation of the hypotheses </h3>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The 'NegativeMood' values have identical data distributions for all 'Socialmediahours'-usage groups. The negative mood of people is independent from their social media use. </td>
+    <td> At least one group of 'Socialmediahours'-usage dominates the other samples. There is a significant connection between the negative mood of people and their social media use.</td>
+  </tr>
+</table></p>
+
+
+<h3> Kruskal-Wallis - Test</h3>
+```{r}
+krus.icm.res <- kruskal.test(NegativeMood ~ Socialmediahours, data = ICM)
+krus.icm.res
+```
+<h3> Result </h3>
+<table>
+  <tr> 
+    <th><h4><b> Conclusion for significance level = 0.05 </b></h4> </th>
+</tr>
+  <tr>
+  <td>
+<h4><b>At the significance level 0.05 we conclude that H<sub>0</sub> has to be rejected.</b></h4>
+<h4>The p value is 0.007884. At least one group of 'Socialmediahours'-usage dominates the other samples. There is a significant connection between the negative mood of people and their social media use. IT appears a higher the social media use causes a higher negative mood.</b></h4></td>
+  </tr>
+</table>
+
+
+***
+
+<h2 id="Exercise_54"> Exercise 54 </h2>
+<p>Use the dataset ’ICM’.
+<br>Without assuming the data to have normal distribution,decide at .05 significance level if the socialization of students has identical data distributions depending on the time spent with friends.</p>
+
+
+<h3>Exploratory Analysis</h3>
+<p>We start with an exploratory data analysis of the dataset ICM and values of 'Socialization' and levels of 'Timewithfriends'</p>
+```{r}
+str(ICM)
+head(ICM)
+inspect(ICM$Socialization)
+inspect(ICM$Timewithfriends)
+unique(ICM$Timewithfriends)
+```
+
+<p>We learn that we have a total of 199 rows, 5 different categories for the 'Timewithfriends' and metric values for the 'Socialization'. 6 values for the 'Socialization' attribute are missing. </p>  
+
+
+<h3>Data Visualization</h3>
+
+```{r message=FALSE, warning=FALSE}
+ggplot(ICM, aes(Timewithfriends, Socialization))+ ggtitle("Boxplot/Violinplot for 'Time with friends' ~ Socialization")+
+  geom_violin(color="orchid3",fill="lightpink",alpha=0.1)+
+  labs(x = "Time with friends", y = "Socialization", caption = "Figure 2 - Boxplot and Violinplot to compare distributions, Exercise 54")+
+  geom_boxplot(width=0.28, varwidth=TRUE,color="royalblue3",fill="lightblue3",
+               alpha=0.4,outlier.colour="red",outlier.fill="red",outlier.size=3)+theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+<h3> Approach </h3> 
+<p>We compare the 'Socialization' for 5 independent groups of 'Timewithfriends', not assuming a normal distribution of the samples. We choose the non-parametric Kruskal-Wallis test.</p>
+
+<h3> Formulation of the hypotheses </h3>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The 'Socialization' values have identical distributions for all 'Timewithfriends' categories. The socialization level of people is independent of the amount of time they spend with friends.</td>
+    <td> At least one group of 'Timewithfriends' categories dominates the other ones. There is a significant connection between the socialization of people and the amount of time they spend with friends.</td>
+  </tr>
+</table></p>
+
+
+<h3> Kruskal-Wallis - Test</h3>
+```{r}
+krus.icm.res <- kruskal.test(Socialization ~ Timewithfriends, data = ICM)
+krus.icm.res
+```
+<h3> Result </h3>
+<table>
+  <tr> 
+    <th><h4><b> Conclusion for significance level = 0.05 </b></h4> </th>
+</tr>
+  <tr>
+  <td>
+<h4><b>At the significance level 0.05 we conclude that H<sub>0</sub> has to be rejected.</b></h4>
+<h4>The p value is 1.198e-05. At least one group of 'Timewithfriends' categories dominates the other ones. There is a significant connection between the socialization of people and the amount of time they spend with friends.</b></h4></td>
+  </tr>
+</table>
+
+***
+
+<h2 id="Exercise_56"> Exercise 56 </h2>
+<p>Use the data set "survey PCA". <br> Assess the normality of the variable "openness".</p>
+
+```{r}
+survey<-read.delim("C:\\_Privat\\_MSC_\\Skripten und Hü\\Statistics\\HW\\Datasets-20221012\\survey_PCA.txt",stringsAsFactors=F)
+```
+
+
+<h3>Exploratory Analysis</h3>
+```{r}
+inspect(survey$openness)
+```
+<p>We already see that the mean is smaller than the median, which is usually a signal for a left skewness of the distribution.</p>
+
+<h3>Part 1 - Visual Inspection</h3>
+<p>Density plot</p>
+```{r}
+ggplot(survey, aes(x=openness))+
+ geom_density(fill="lightblue", color="dodgerblue", alpha=0.8)+
+  geom_vline(data=survey, aes(xintercept=mean(openness)),color="cyan4", linetype="dashed")+
+ ggtitle("Density plot for openness") + labs(x = "Openness distribution", y = "Density", caption = "Figure 3 - Density plot, Exercise 56")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+<p>Box Plot</p>
+```{r}
+ggplot(survey, aes(x=openness))+
+  geom_boxplot(color="blue",
+               fill="lightblue",alpha=0.2,outlier.colour="red",
+               outlier.fill="red",outlier.size=3)+
+  labs(x = "Openness")+ ggtitle("Box plot for openness") + labs(x = "Openness distribution", caption = "Figure 4 -Box plot, Exercise 56")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+
+
+<p>Q-Q Plot</p>
+<p>The quantile-quantile plot draws the correlation between a given sample and the normal distribution.</p>
+
+```{r message=FALSE, warning=FALSE}
+ggqqplot(survey$openness, col = "steelblue", lwd = 2) + theme_bw() + theme(legend.position="top") + geom_qq_line(col = "red") +
+ ggtitle("Q-Q plot for openness") + labs(x = "Theoretical distribution", y = "Sample distribution", caption = "Figure 5 - Q-Q plot, Exercise 56")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+<h3>Part 2 - Significance tests</h3>
+
+<p>Shapiro-Wilk’s test</p>
+```{r}
+shapiro.test(survey$openness)
+```
+
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusion - Test for normal distribution</b></h4> </th>
+</tr>
+  <tr>
+    <td>
+      <h4>Visual and significance testing based results indicate that the variable "openness" is normally distributed. The Shapiro-Wilk test has a non significant value of 0.08856.</h4>
+    </td>
+  </tr>
+</table>
+
+
+***
+
+<h2 id="Exercise_57"> Exercise 57 </h2>
+<p>Use the data set "survey PCA". <br> Assess the normality of the variable "compatibility".</p>
+
+<h3>Exploratory Analysis</h3>
+```{r}
+head(survey)
+inspect(survey$compatibility)
+```
+
+
+<h3>Part 1 - Visual Inspection</h3>
+<p>Density plot</p>
+```{r}
+ggplot(survey, aes(x=compatibility))+
+ geom_density(fill="lightblue", color="dodgerblue", alpha=0.8)+
+  geom_vline(data=survey, aes(xintercept=mean(compatibility)),color="cyan4", linetype="dashed")+
+ ggtitle("Density plot for compatibility") + labs(x = "Compatibility distribution", y = "Density", caption = "Figure 6 - Density plot, Exercise 57")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+<p>Box Plot</p>
+```{r}
+ggplot(survey, aes(x=compatibility))+
+  geom_boxplot(color="blue",
+               fill="lightblue",alpha=0.2,outlier.colour="red",
+               outlier.fill="red",outlier.size=3)+
+  labs(x = "Compatibility")+ ggtitle("Box plot for compatibility") + labs(x = "Compatibility distribution", caption = "Figure 7 -Box plot, Exercise 57")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+
+
+<p>Q-Q Plot</p>
+```{r message=FALSE, warning=FALSE}
+ggqqplot(survey$compatibility, col = "steelblue", lwd = 2) + theme_bw() + theme(legend.position="top") + geom_qq_line(col = "red") +
+ ggtitle("Q-Q plot for compatibility") + labs(x = "Theoretical distribution", y = "Sample distribution", caption = "Figure 8 - Q-Q plot, Exercise 57")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+
+
+<h3>Part 2 - Significance tests</h3>
+
+<p>Shapiro-Wilk’s test</p>
+```{r}
+shapiro.test(survey$compatibility)
+```
+
+
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusion - Test for normal distribution</b></h4> </th>
+</tr>
+  <tr>
+    <td>
+      <h4>Visual and significance testing based resluts indicate that the variable "compatibility" is not normally distributed. The Shapiro-Wilk test has a significant value of 0.02543.</h4>
+    </td>
+  </tr>
+</table>
+
+***
+
+<h2 id="Exercise_58"> Exercise 58 </h2>
+<p>Use the data set "survey PCA". <br> Assess the normality of the variable  "conscientiousness".</p>
+
+
+<h3>Exploratory Analysis</h3>
+```{r}
+head(survey)
+inspect(survey$conscientiousness)
+```
+
+
+<h3>Part 1 - Visual Inspection</h3>
+<p>Density plot</p>
+```{r}
+ggplot(survey, aes(x=conscientiousness))+
+ geom_density(fill="lightblue", color="dodgerblue", alpha=0.8)+
+  geom_vline(data=survey, aes(xintercept=mean(conscientiousness)),color="cyan4", linetype="dashed")+
+ ggtitle("Density plot for conscientiousness") + labs(x = "Conscientiousness distribution", y = "Density", caption = "Figure 9 - Density plot, Exercise 58")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+<p>Box Plot</p>
+```{r}
+ggplot(survey, aes(x=conscientiousness))+
+  geom_boxplot(color="blue",
+               fill="lightblue",alpha=0.2,outlier.colour="red",
+               outlier.fill="red",outlier.size=3)+
+  labs(x = "conscientiousness")+ ggtitle("Box plot for conscientiousness") + labs(x = "Conscientiousness distribution", caption = "Figure 10 - Box plot, Exercise 58")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+
+
+<p>Q-Q Plot</p>
+```{r message=FALSE, warning=FALSE}
+ggqqplot(survey$conscientiousness, col = "steelblue", lwd = 2) + theme_bw() + theme(legend.position="top") + geom_qq_line(col = "red") +
+ ggtitle("Q-Q plot for conscientiousness") + labs(x = "Theoretical distribution", y = "Samplel distribution", caption = "Figure 11 - Q-Q plot, Exercise 58")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+<h3>Part 2 - Significance tests</h3>
+<p>Shapiro-Wilk’s test</p>
+```{r}
+shapiro.test(survey$conscientiousness)
+```
+
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusion - Test for normal distribution</b></h4> </th>
+</tr>
+  <tr>
+    <td>
+      <h4>Visual and significance testing based results indicate that the variable "conscientiousness" is normally distributed. The Shapiro-Wilk test has a non significant value of 0.1638.</h4>
+    </td>
+  </tr>
+</table>
+
+
+***
+
+<h2 id="Exercise_60"> Exercise 60 </h2>
+<p>Use the data set "ICM". <br> Does the OHS (Oxford Happiness Score) of the students differ from the average score of 4?</p>
+
+```{r}
+inspect(ICM$OHS)
+```
+
+<p>Remove missing values from dataset</p>
+```{r}
+OHS_clean <- subset(ICM$OHS, !is.na(ICM$OHS))
+inspect(OHS_clean)
+```
+
+<h3> Approach </h3> 
+<p>Two mean values, namely the average score of 4 and the mean value of all students in the dataset, are being compared. <br> First we test for a normal distribution of the data.<br> If the data is normally distributed a one-sample t-test, a parametric test method, will be applied. If the data is not normally distributed a non-parametric test could also be applied.</p>
+
+<h3> Step 1: Test for normal distribution </h3>
+<p>Shapiro-Wilk’s test</p>
+```{r}
+shapiro.test(OHS_clean)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+ggplot(ICM, aes(x=OHS))+
+ geom_density(fill="lightblue", color="dodgerblue", alpha=0.8)+
+  geom_vline(aes(xintercept=mean(OHS_clean)),color="cyan4", linetype="dashed")+
+ ggtitle("Density plot for OHS") + labs(x = "OHS distribution", y = "Density", caption = "Figure 12 - Density plot, Exercise 60")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+<p>The Shapiro-Wilk test with a vale of 0.002283 would imply that there is no normal distribution and we need to reject the Null Hypothesis. There data is not normally distributed. At this point we would normally not execute a parametric test, but we continue in order to finish the example.</p>
+
+<h3> Formulation of the hypotheses </h3>
+<p><table>
+  <tr>
+    <th> Null Hypothesis </th>
+    <th> Alternative Hypothesis </th>
+  </tr>
+  <tr>
+    <td> The mean of the Oxford Happiness Score in the dataset ICM equals to the average score of 4. µ = µ<sub>0</sub></td>
+    <td> The mean of the Oxford Happiness Score in the dataset ICM differs from the average score of 4. µ != µ<sub>0</sub></td>
+  </tr>
+</table></p>
+
+
+<h3> Determination of test statistics </h3>
+<p>calculate the (mean - µ<sub>0</sub>)/σ * &#8730; n </p>
+
+
+```{r}
+t.obs <- (4.204801-4)/0.7764805*181^0.5
+t.obs
+
+```
+<h3>Determination of the critical value </h3>
+<p>Quantiles of the t-distribution with df = 180 at α = 5% level </p>
+```{r}
+qt(0.975, 180, ncp=0, lower.tail = TRUE, log.p = FALSE)
+
+```
+
+<p> Decision </p>
+<p>t<sub>pr</sub> > t<sub>f;1−α/2</sub> : H<sub>0</sub> is rejected in favour of H<sub>1</sub></p>
+<p>t<sub>pr</sub> ≤ t<sub>f;1−α/2</sub> : H<sub>0</sub> is not rejected</p>
+
+<h4><b>The test statistics are bigger than the critical value: 3.548467 > 1.973231! So we have to reject H<sub>0</sub></b></h4>
+
+
+<h3>Calculate one sample t-Test using R</h3>
+```{r}
+res <- t.test(OHS_clean, mu = 4)
+res
+```
+
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusion for significance level = 0.05 </b></h4> </th>
+</tr>
+  <tr>
+  <td>
+<h4><b>At the significance level 0.05 we conclude that H<sub>0</sub> has to be rejected.</b></h4>
+<h4>The mean of the Oxford Happiness Score in the dataset ICM differs significantly from the average score of 4, and is higher than the average score of 4.</h4></td>
+  </tr>
+</table>
+
+***
+
+<h2 id="Exercise_61"> Exercise 61 </h2>
+<p>Use the data set "height".<br>According to the CDC, the mean height of U.S. adults ages 20 and older is about 66.5 inches.<br> We have a sample of 408 college students from a single college. Let’s test if the mean height of students at this college is significantly different than 66.5 inches using a one-sample t test. </p>
+
+```{r}
+height<-read.delim("C:\\_Privat\\_MSC_\\Skripten und Hü\\Statistics\\HW\\Datasets-20221012\\height.txt",stringsAsFactors=F)
+```
+
+<h3> Exploratory Data Analysis </h3>
+```{r}
+str(height)
+head(height)
+inspect(height)
+```
+
+<h3> Approach </h3> 
+<p>Two mean values are being compared. From a former test result we get a mean value of 66.5 inches. The mean value of the students in the dataset will be compared against this value. <br> First we test for a normal distribution of the data.<br> If the data is normally distributed a one-sample t-test, a parametric test method, will be applied. If the data is not normally distributed a non-parametric test could also be applied.</p>
+
+<h3> Step 1: Test for normal distribution </h3>
+<p>Shapiro-Wilk’s test</p>
+```{r}
+shapiro.test(height$Height)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+ggplot(height, aes(x=Height))+
+ geom_density(fill="lightblue", color="dodgerblue", alpha=0.8)+
+  geom_vline(data=height, aes(xintercept=mean(Height)),color="cyan4", linetype="dashed")+
+ ggtitle("Density plot for height") + labs(x = "height distribution", y = "Density", caption = "Figure 13 - Density plot, Exercise 61")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+<p>We see a normally distributed data. The parametric one-sample T Test can be applied.</p>
+
+<h3> Formulation of the hypotheses </h3>
+<p><table>
+  <tr>
+    <th> Null Hypothesis </th>
+    <th> Alternative Hypothesis </th>
+  </tr>
+  <tr>
+    <td> The mean height of the students in the dataset equals to the average height of 66.5 inches. µ = µ<sub>0</sub></td>
+    <td> The mean height of the students in the dataset differs from the average height of 66.5 inches. µ != µ<sub>0</sub></td>
+  </tr>
+</table></p>
+
+
+<h3> Determination of test statistics </h3>
+<p>calculate the (mean - µ<sub>0</sub>)/σ * &#8730; n </p>
+
+
+```{r}
+t.obs <- (68.03176-66.5)/5.325655*408^0.5
+t.obs
+
+```
+<h3>Determination of the critical value </h3>
+<p>Quantiles of the t-distribution with df = 407 at α = 5% level </p>
+```{r}
+qt(0.975, 407, ncp=0, lower.tail = TRUE, log.p = FALSE)
+
+```
+
+<p> Decision </p>
+<p>t<sub>pr</sub> > t<sub>f;1−α/2</sub> : H<sub>0</sub> is rejected in favor of H1</p>
+<p>t<sub>pr</sub> ≤ t<sub>f;1−α/2</sub> : H<sub>0</sub> is not rejected</p>
+
+<h4><b>The test statistics are bigger than the critical value: 5.809621 > 1.96581! So we have to reject H<sub>0</sub> </b></h4>
+
+<h3>Calculate one sample t-Test using R</h3>
+```{r}
+res <- t.test(height$Height, mu = 66.5)
+res
+```
+
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusion for significance level = 0.05 </b></h4> </th>
+</tr>
+  <tr>
+  <td>
+  <h4><b>At the significance level 0.05 we conclude that H<sub>0</sub> has to be rejected.</b></h4>
+<h4>The mean height of the students in the dataset differs significantly from the average height of 66.5inches. It is significantly higher than the average height.</h4></td>
+  </tr>
+</table>
+
+***
+
+<h2 id="Exercise_63"> Exercise 63 </h2>
+<p>Use the dataset ’diet paired’.<br>Is there a statistically significant difference between the body weight of the patients before the diet and after the diet?</p>
+
+```{r}
+diet_paired<-read.delim("C:\\_Privat\\_MSC_\\Skripten und Hü\\Statistics\\HW\\Datasets-20221012\\diet_paired.txt",stringsAsFactors=F)
+```
+
+
+<h3> Exploratory Data Analysis </h3>
+```{r}
+str(diet_paired)
+head(diet_paired)
+inspect(diet_paired)
+```
+
+<h3> Approach </h3> 
+<p> Two samples are being matched. The values come from repeated observations of the sample subjects. <br> If the data is normally distributed a paired t-test, a parametric test method, will be applied.</p>
+
+<h3> Step 1: Test for normal distribution </h3>
+<p>Shapiro-Wilk’s test</p>
+```{r}
+shapiro.test(diet_paired$before_diet)
+shapiro.test(diet_paired$after_diet)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+plot_1 <- ggplot(diet_paired, aes(x=before_diet))+
+ geom_density(fill="lightblue", color="dodgerblue", alpha=0.8)+
+ ggtitle("Density plots for before_diet/after_diet") + labs(x = "before diet distribution", y = "Density")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+
+plot_2 <- ggplot(diet_paired, aes(x=after_diet))+
+ geom_density(fill="lightblue", color="dodgerblue", alpha=0.8)+
+ labs(x = "after diet distribution", y = "Density", caption = "Figure 14 - Density plots, Exercise 63")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+
+grid.arrange(plot_1, plot_2, ncol = 1)
+```
+
+<p>We see a normally distributed data. The parametric paired t-test can be applied.</p>
+
+<h3> Formulation of the hypotheses </h3>
+<p><table>
+  <tr>
+    <th> Null Hypothesis </th>
+    <th> Alternative Hypothesis </th>
+  </tr>
+  <tr>
+    <td> There is no difference between the body weight of the patients before the diet and after the diet.</td>
+    <td> There is a significant difference between the body weight of the patients before and after the diet.</td>
+  </tr>
+</table></p>
+
+
+<h3>Calculate paired t-Test using R</h3>
+```{r}
+result <-t.test(diet_paired$before_diet, diet_paired$after_diet, paired=TRUE)
+result
+
+```
+
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusion for significance level = 0.05 </b></h4> </th>
+</tr>
+  <tr>
+  <td>
+  <h4><b>At the significance level 0.05 we conclude that H<sub>0</sub> has to be rejected.</b></h4>
+<h4>There is a significant difference between the body weight of the patients before and after the diet. IT is significantly lower after the diet. </h4></td>
+  </tr>
+</table>
+
+
+
+***
+
+<h2 id="Exercise_64"> Exercise 64 </h2>
+<p>Use the dataset ’OHS 2020 paired’.<br> Is there a statistically significant difference between the happiness of the students between the three time points?</p>
+
+
+```{r}
+OHS_2020_paired<-read.delim("C:\\_Privat\\_MSC_\\Skripten und Hü\\Statistics\\HW\\Datasets-20221012\\OHS_2020_paired.txt",stringsAsFactors=F)
+```
+
+
+<h3> Exploratory Data Analysis </h3>
+```{r}
+str(OHS_2020_paired)
+head(OHS_2020_paired)
+inspect(OHS_2020_paired)
+```
+
+
+<h3> Approach </h3> 
+<p> Two samples are being matched. The values come from 3 repeated observations of the sample subjects. <br> If the data is normally distributed a paired t-test, a parametric test method, will be applied.</p>
+
+<h3> Step 1: Test for normal distribution </h3>
+<p>Shapiro-Wilk’s test</p>
+```{r}
+shapiro.test(OHS_2020_paired$OHS_1)
+shapiro.test(OHS_2020_paired$OHS_2)
+shapiro.test(OHS_2020_paired$OHS_3)
+```
+
+
+<p>We see a normally distributed data. The parametric paired t-test can be applied.</p>
+
+<h3> Formulation of the hypotheses </h3>
+<p><table>
+  <tr>
+    <th> Null Hypothesis </th>
+    <th> Alternative Hypothesis </th>
+  </tr>
+  <tr>
+    <td> There is no difference between the happiness scores over the three different time points.</td>
+    <td> There is a significant difference between the happiness scores over the three different time points.</td>
+  </tr>
+</table></p>
+
+
+<h3>Calculate paired t-Test using R</h3>
+```{r}
+result_1_2 <-t.test(OHS_2020_paired$OHS_1, OHS_2020_paired$OHS_2, paired=TRUE)
+result_1_2
+
+result_2_3 <-t.test(OHS_2020_paired$OHS_2, OHS_2020_paired$OHS_3, paired=TRUE)
+result_2_3
+
+result_1_3 <-t.test(OHS_2020_paired$OHS_1, OHS_2020_paired$OHS_3, paired=TRUE)
+result_1_3
+
+```
+
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusion for α = 0.05 -> Year 1 to Year 2 </b></h4> </th>
+    <th><h4><b> Conclusion for α = 0.05 -> Year 2 to Year 3 </b></h4> </th>
+    <th><h4><b> Conclusion for α = 0.05 -> Year 1 to Year 3 </b></h4> </th>
+</tr>
+  <tr>
+  <td>
+  <p>At the significance level 0.05 we conclude that H<sub>0</sub> has to be accepted.</p>
+<p>There is no difference between the happiness scores of year 1 and year 2</p></td>
+  <td>
+  <p>At the significance level 0.05 we conclude that H<sub>0</sub> has to be accepted.</p>
+<p>There is no difference between the happiness scores of year 2 and year 3</p></td>
+  <td>
+  <p>At the significance level 0.05 we conclude that H<sub>0</sub> has to be accepted.</p>
+<p>There is no difference between the happiness scores of year 1 and year 3</p></td>
+  </tr>
+</table>
+
+
+
+***
+
+<h2 id="Exercise_66"> Exercise 66 </h2>
+<p>Assuming that the data in ICM follows a normal distribution, find the 95% confidence interval estimate of the difference between the Oxford Happiness Score of male and female students.</p>
+
+
+<h3> Exploratory Data Analysis </h3>
+```{r}
+str(ICM)
+head(ICM)
+inspect(ICM$OHS)
+```
+
+<h3> Data Visualization </h3>
+
+```{r message=FALSE, warning=FALSE}
+ggplot(ICM, aes(x = Gender, y = OHS, fill=Gender))+ ggtitle("Boxplot/Violinplot for OHS and Gender")+
+  geom_violin(color="orchid3",fill="lightpink",alpha=0.1)+
+  labs(x = "Gender", y = "OHS", caption = "Figure 15 - Boxplot and Violinplot, Exercise 66")+
+  geom_boxplot(width=0.4, varwidth=TRUE,color="royalblue3",fill="lightblue3",
+               alpha=0.4,outlier.colour="red",outlier.fill="red",outlier.size=3)+theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+<h3> Formulation of the hypotheses </h3>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The difference in means of the OHS between female and male students is equal to 0.</td>
+    <td> The difference in means of the OHS between female and male students is not equal to 0.</td>
+  </tr>
+</table></p>
+
+<h3>Calculate unpaired t-test using R</h3>
+```{r}
+result_t_test <- t.test(OHS ~ Gender, data=ICM)
+result_t_test
+```
+
+<p>The mean for the OHS for male students is 4.175439.</p> 
+<p>The mean for the OHS for female students is 4.218298.</p> 
+
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusion for significance level = 0.05</b></h4> </th>
+</tr>
+  <tr>
+  <td>
+  <h4>At the significance level 0.05 we conclude that H<sub>0</sub> has to be accepted.</h4>
+<h4>The value of p is 0.7284. The difference in means between female and male students is equal to 0.</h4></td>
+  </tr>
+</table>
+
+***
+
+<h2 id="Exercise_67"> Exercise 67 </h2>
+<p>Assuming that the data in ICM follows a normal distribution, find the 95% confidence interval estimate of the difference between the Communication style (open and direct) of students with siblings and students without siblings.  </p>
+
+
+<h3> Exploratory Data Analysis </h3>
+```{r}
+str(ICM)
+head(ICM)
+inspect(ICM$Communication_open_direct)
+```
+
+
+<h3> Data Visualization </h3>
+
+```{r message=FALSE, warning=FALSE}
+ggplot(ICM, aes(x = Siblings, y = Communication_open_direct, fill=Siblings))+ ggtitle("Boxplot/Violinplot for Communication style and Siblings yes/no")+
+  geom_violin(color="orchid3",fill="lightpink",alpha=0.1)+
+  labs(x = "Siblings yes/no", y = "Communication style", caption = "Figure 16 - Boxplot and Violinplot, Exercise 67")+
+  geom_boxplot(width=0.4, varwidth=TRUE,color="royalblue3",fill="lightblue3",
+               alpha=0.4,outlier.colour="red",outlier.fill="red",outlier.size=3)+theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+<h3> Formulation of the hypotheses </h3>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The difference in means of the Communication style between students with Siblings and students without siblings is equal to 0.</td>
+    <td> The difference in means of the Communication style between students with Siblings and students without siblings is not equal to 0.</td>
+  </tr>
+</table></p>
+
+<h3> Approach </h3> 
+<p> Two samples are independent (Siblings yes/no) <br> If the data is normally distributed an unpaired t-test, a parametric test method, will be applied.</p>
+
+
+<h3> Step 1: Test for normal distribution </h3>
+<p>Shapiro-Wilk’s test</p>
+```{r}
+shapiro.test(ICM$Communication_open_direct)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+ggplot(ICM, aes(x=Communication_open_direct))+
+ geom_density(fill="lightblue", color="dodgerblue", alpha=0.8)+
+ ggtitle("Density plot for Communication_open_direct") + labs(x = "Communication_open_direct distribution", y = "Density", caption = "Figure 17 - Density plot, Exercise 67")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+<h3>Calculate unpaired t-test using R</h3>
+```{r}
+result_t_test <- t.test(Communication_open_direct ~ Siblings, data=ICM)
+result_t_test
+```
+
+
+<p>The mean for communication style open/direct for students with siblings is 3.783308.</p> 
+<p>The mean for communication style open/direct for students with siblings is 3.498328.</p> 
+
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusion for significance level = 0.05</b></h4> </th>
+</tr>
+  <tr>
+  <td>
+  <h4>At the significance level 0.05 we conclude that H<sub>0</sub> has to be accepted.</h4>
+<h4>The value of p is 0.09877. The difference in means of the Communication style between students with Siblings and students without siblings is equal to 0.</h4></td>
+  </tr>
+</table>
+
+
+***
+
+
+<h2 id="Exercise_68"> Exercise 68 </h2>
+<p>Assuming that the data in ICM follows a normal distribution, find the 95% confidence interval estimate of the difference between the mental health of students with children and students without children. </p>
+
+
+
+<h3> Exploratory Data Analysis </h3>
+```{r}
+str(ICM)
+head(ICM)
+inspect(ICM$Mentalhealth)
+```
+
+<h3> Data Visualization </h3>
+
+```{r message=FALSE, warning=FALSE}
+ggplot(ICM, aes(x = Children, y = Mentalhealth, fill=Children))+ ggtitle("Boxplot/Violinplot for Mentalhealth and Children yes/no")+
+  geom_violin(color="orchid3",fill="lightpink",alpha=0.1)+
+  labs(x = "Children yes/no", y = "Mentalhealth", caption = "Figure 18 - Boxplot and Violinplot, Exercise 68")+
+  geom_boxplot(width=0.4, varwidth=TRUE,color="royalblue3",fill="lightblue3",
+               alpha=0.4,outlier.colour="red",outlier.fill="red",outlier.size=3)+theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+<h3> Formulation of the hypotheses </h3>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The difference in mean between the mental health of students with children and students without children is equal to 0.</td>
+    <td> The difference in mean between the mental health of students with children and students without children is not equal to 0.</td>
+  </tr>
+</table></p>
+
+
+<h3> Approach </h3> 
+<p> Two samples are independent (Children yes/no) <br> If the data is normally distributed an unpaired t-test, a parametric test method, will be applied.</p>
+
+
+<h3> Step 1: Test for normal distribution </h3>
+<p>Shapiro-Wilk’s test</p>
+```{r}
+shapiro.test(ICM$Mentalhealth)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+ggplot(ICM, aes(x=Mentalhealth))+
+ geom_density(fill="lightblue", color="dodgerblue", alpha=0.8)+
+ ggtitle("Density plot for Mentalhealth") + labs(x = "Mentalhealth distribution", y = "Density", caption = "Figure 19 - Density plot, Exercise 68")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+<h3>Calculate unpaired t-test using R</h3>
+```{r}
+result_t_test <- t.test(Mentalhealth ~ Children, data=ICM)
+result_t_test
+```
+
+<p>The mean for mental health for students with children is 2.716667.</p> 
+<p>The mean for mental health for students without children is 2.399802.</p> 
+
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusion for significance level = 0.05</b></h4> </th>
+</tr>
+  <tr>
+  <td>
+  <h4>At the significance level 0.05 we conclude that H<sub>0</sub> has to be rejected.</h4>
+<h4>The value of p is 0.02925. The difference in means of the mental health between students with children and students without children is not equal to 0. The mental health is significantly higher for students with children. </h4></td>
+  </tr>
+</table>
+
+
+***
+

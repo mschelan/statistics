@@ -1,0 +1,787 @@
+---
+title: "APPDS - Statistics"
+subtitle: "HW 6 - 2022/12/02 - Schelander Martina"
+output:
+  html_document:
+    df_print: paged
+---
+
+<h2> Table of Contents </h2> 
+<ol>
+    <li>
+      <a href="#Exercise_70">
+      <span class="title">Exercise 70 - Anova Fast food franchise</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_71">
+      <span class="title">Exercise 71 - Anova Socialmedia Hours/ICM</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_72">
+      <span class="title">Exercise 72 - Anova Socialization/Time with friends</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_75">
+      <span class="title">Exercise 75 - Linear regression mtcars</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_76">
+      <span class="title">Exercise 76 - Linear regression income </span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_79">
+      <span class="title">Exercise 79 - Pearson correlation weight height</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_80">
+      <span class="title">Exercise 80 - Pearson correlation negative / positive mood</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_83">
+      <span class="title">Exercise 83 - Spearman's rho weight height</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_84">
+      <span class="title">Exercise 84 - Spearman's rho negative mood OHS</span>
+      </a>
+    </li>
+</ol>
+
+<style>
+table, th, td {
+  border:1px solid black;
+  padding: 4px;
+}
+tr:nth-child(odd) {
+  background-color: #E6F6F669;
+}
+th{
+  background-color: #D6EEEE;
+}
+</style>
+
+
+Prerequisites - Load libraries
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+library(mosaic)
+library(knitr)
+library(ggpubr)
+library(car)
+library(multcomp)
+```
+
+***
+
+<h2 id="Exercise_70"> Exercise 70 </h2>
+<p>A fast food franchise is test marketing 3 new menu items.
+<br> 18 franchise restaurants are randomly chosen for participation in the study.
+<br> 6 of the restaurants are randomly chosen to test market the first new menu item, another 6 for the second menu item, and the remaining 6 for the last menu item.
+<br> At .05 level of significance, test whether the mean sales volume for the 3 new menu items are all equal.
+<br> Dataset: fastfood.txt
+</p>
+
+<p>Load and inspect the data</p>
+```{r}
+fastfood<-read.delim("C:\\_Privat\\_MSC_\\Skripten und Hü\\Statistics\\HW\\Datasets-20221012\\fastfood.txt",stringsAsFactors=F)
+kable(fastfood)
+unique(fastfood$Menu)
+```
+
+<h4>Approach</h4>
+<p> The one-factor Analysis of Variance (ANOVA) allows for the comparison of means of more than two groups (=3 in this case) for independent samples.
+<br>Independent grouping variable: Item1 to Item3 for 6 different restaurants each 
+<br>Dependent variable: Sales </p>
+
+<h4>Prerequisites for application of ANOVA</h4>
+<p>-The observations are obtained independently and randomly from the population defined by the factor levels.
+<br>-The data of each factor level are normally distributed.
+<br>-These normal populations have a common variance.</p>
+
+<h3> Formulation of the hypotheses </h3>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean sales volume for the 3 new menu items are all equal.</td>
+    <td> The sales volume for at least one fo the items differs from the others.</td>
+  </tr>
+</table></p>
+
+
+```{r}
+group_by(fastfood, Menu) %>% summarise(count = n(),mean = mean(Sales, na.rm = TRUE),sd = sd(Sales, na.rm = TRUE))
+```
+
+<h3>1. Data visualization</h3>
+```{r}
+ggplot(fastfood, aes(Menu, Sales), order = c("Item1", "Item2", "Item3"))+ ggtitle("Boxplot/Violinplot for Menuitem ~ Sales")+
+  geom_violin(color="#00AFBB",fill="lightpink",alpha=0.1)+
+  labs(x = "Menu Items", y = "Sales", caption = "Figure 1 - Boxplot and Violinplot to compare distributions, Exercise 70")+
+  geom_boxplot(width=0.25, varwidth=TRUE,color="royalblue3",fill="lightblue3",
+               alpha=0.4,outlier.colour="blue",outlier.fill="blue",outlier.size=3)+theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+<h4>One of the prerequisites of ANOVA is a normal distribution of the factor levels. In this example this is not the case!<h4>
+
+
+<h3>2. Analysis ANOVA</h3>
+```{r}
+res.aov <- aov(Sales ~ Menu, data = fastfood)
+summary(res.aov)
+```
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for significance level = 0.05</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4><b>The p-value of the ANOVA test is 0.112. <br>At a significance level of 0.05 H<sub>0</sub> has to be accepted. </b></h4>
+  <h4>The mean sales volume for the 3 new menu items are all equal.</h4>
+    <h4>Since the data show no normal distribution the applicability of ANOVA has to be questioned. </h4>
+  </td>
+</tr>
+</table>
+
+<h3>3. Check for test validity</h3>
+<p>Homogeneity of the variances</p>
+```{r}
+leveneTest(Sales ~ Menu, data = fastfood)
+```
+
+<p> The p value is 0.54. So there is no evidence to suggest that the variance across groups is different. We can assume the homogeneity of variances.</p>
+
+```{r}
+aov_residuals <- residuals(object = res.aov)
+shapiro.test(x = aov_residuals)
+```
+
+<p> The shapiro test on the residuals finds no indication that the normality is violated. There is no systematic error. </p>
+
+***
+
+<h2 id="Exercise_71"> Exercise 71 </h2>
+<p> Use the data set ’ICM’. At 0.05 level of significance, test whether the means of the negative mood of students are equal between the groups of social media use. </p>
+
+<p>Load and inspect the data set</p>
+```{r message=FALSE, warning=FALSE}
+ICM<-read.delim("C:\\_Privat\\_MSC_\\Skripten und Hü\\Statistics\\HW\\Datasets-20221012\\ICM.txt",stringsAsFactors=F)
+head(ICM)
+unique(ICM$Socialmediahours)
+```
+
+<h4>Approach</h4>
+<p> The one-factor Analysis of Variance (ANOVA) allows for the comparison of means of more than two groups (=4 in this case) for independent samples.
+<br>Independent grouping variable: Socialmediahours "1.5-3hrs/day" "<1.5hrs/day"  "3-5hrs/day"   ">5hours/day"  
+<br>Dependent variable: NegativeMood </p>
+
+<h4>Prerequisites for application of ANOVA</h4>
+<p>-The observations are obtained independently and randomly from the population defined by the factor levels.
+<br>-The data of each factor level are normally distributed.
+<br>-These normal populations have a common variance.</p>
+
+<h3> Formulation of the hypotheses </h3>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean values for negative mood for the 4 social media usage groups are all equal.</td>
+    <td> At least one mean value for negative mood for the 4 social media usage groups is different from the others.</td>
+  </tr>
+</table></p>
+
+
+
+```{r}
+group_by(ICM, Socialmediahours) %>% summarise(count = n(),mean = mean(NegativeMood, na.rm = TRUE),sd = sd(NegativeMood, na.rm = TRUE))
+```
+
+<h3>1. Data visualization</h3>
+```{r message=FALSE, warning=FALSE}
+ggboxplot(ICM, x = "Socialmediahours", y = "NegativeMood", color = "Socialmediahours", width=0.31, varwidth=TRUE, palette = c("#00AFBB", "#E7B800", "#FC4E07", "#AE4371"), order = c("<1.5hrs/day", "1.5-3hrs/day", "3-5hrs/day",">5hours/day"), ylab = "Negative Mood", xlab = "Social media hours") +
+  geom_violin(color="thistle3",fill="thistle1",alpha=0.1)+
+  labs(x = "Socialmediahours", y = "Negative Mood", caption = "Figure 2 - Boxplot and Violinplot to check for normal distributions, Exercise 71")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+ theme_grey() + theme(plot.title = element_text(hjust = 0.5))
+```
+
+<h3>2. Analysis and summary of the variance</h3>
+```{r}
+res.aov <- aov(NegativeMood ~ Socialmediahours, data = ICM)
+summary(res.aov)
+```
+
+<h3>3. Pairwise comparison between the groups</h3>
+<p>Tukey HSD (Tukey Honest Significant Differences)</p>
+```{r}
+TukeyHSD(res.aov)
+```
+
+
+<h3>4. Check for test validity</h3>
+<p>Homogeneity of the variances</p>
+
+```{r}
+leveneTest(NegativeMood ~ Socialmediahours, data = ICM)
+```
+
+<p>The p value is 0.5687. So there is no evidence to suggest that the variance across groups is different. We can assume the homogeneity of variances.</p>
+
+```{r}
+aov_residuals <- residuals(object = res.aov)
+shapiro.test(x = aov_residuals)
+```
+
+<p> The shapiro test on the residuals finds no indication that the normality is violated. There is no systematic error. </p>
+
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for significance level = 0.05</b> <br> whether the means of the negative mood of students are equal between the groups of social media use.</h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4><b>The p-value of the ANOVA test is 0.00538.<br>At a significance level of 0.05 H<sub>0</sub> has to be rejected. </b></h4>
+  <h4>At least one mean value for negative mood for the 4 social media usage groups is significantly different from the others.</h4>
+  <h4>The Tukey HSD-Test shows significant differences between two groups. <br>  3-5hrs/day - <1.5hrs/day = (adjusted p-value) 0.0124196 <br> 3-5hrs/day - 1.5-3hrs/day = (adjusted p-value) 0.0218511 </h4>
+  </td>
+</tr>
+</table>
+
+
+***
+
+<h2 id="Exercise_72"> Exercise 72 </h2>
+<p> Use the data set ’ICM’. At 0.05 level of significance, test whether the means of the socialization of students are equal between the groups of time spent with friends. </p>
+
+
+<p>Inspect the data set</p>
+```{r message=FALSE, warning=FALSE}
+inspect(ICM$Socialization)
+unique(ICM$Timewithfriends)
+```
+
+
+<h4>Approach</h4>
+<p> The one-factor Analysis of Variance (ANOVA) allows for the comparison of means of more than two groups (=5 in this case) for independent samples.
+<br>Independent grouping variable: Timewithfriends "2-5hrs/week"   "5-10hrs/week"  "10-20hrs/week" ">20hrs/week"   "<2hrs/week"   
+<br>Dependent variable: Socialization </p>
+
+<h4>Prerequisites for application of ANOVA</h4>
+<p>-The observations are obtained independently and randomly from the population defined by the factor levels.
+<br>-The data of each factor level are normally distributed.
+<br>-These normal populations have a common variance.</p>
+
+<h3> Formulation of the hypotheses </h3>
+<p><table>
+  <tr>
+    <th><b> Null Hypothesis </b></th>
+    <th><b> Alternative Hypothesis </b></th>
+  </tr>
+  <tr>
+    <td> The mean values for socialization skills for the 5 groups for the amount of time spent with friends are all equal.</td>
+    <td> At least one mean value for Socialization for the 5 groups for the amount of time spent with friends is different from the others.</td>
+  </tr>
+</table></p>
+
+
+
+```{r}
+group_by(ICM, Timewithfriends) %>% summarise(count = n(),mean = mean(Socialization, na.rm = TRUE),sd = sd(Socialization, na.rm = TRUE))
+```
+
+<h3>1. Data visualization</h3>
+```{r warning=FALSE}
+ggboxplot(ICM, x = "Timewithfriends", y = "Socialization", color = "Timewithfriends", width=0.25, varwidth=TRUE, palette = c("#00AFBB", "#E7B800", "#FC4E07", "#AE4371", "#330033"), order = c("<2hrs/week", "2-5hrs/week", "5-10hrs/week","10-20hrs/week", ">20hrs/week"), ylab = "Socialization", xlab = "Time with friends") + geom_violin(color="thistle3",fill="thistle1",alpha=0.1)+
+  labs(x = "Socialmediahours", y = "Negative Mood", caption = "Figure 3 - Boxplot and Violinplot to check for normal distributions, Exercise 72")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+ theme_grey() + theme(plot.title = element_text(hjust = 0.5))
+```
+
+<h3>2. Analysis ANOVA</h3>
+```{r}
+res.aov <- aov(Socialization ~ Timewithfriends, data = ICM)
+summary(res.aov)
+```
+
+<h3>3. Pairwise comparison between the groups</h3>
+<p>Tukey HSD (Tukey Honest Significant Differences)</p>
+```{r}
+TukeyHSD(res.aov)
+```
+
+
+<h3>4. Check for test validity</h3>
+<p>Homogeneity of the variances</p>
+```{r}
+leveneTest(Socialization ~ Timewithfriends, data = ICM)
+```
+
+<p> The p value is 0.4843. So there is no evidence to suggest that the variance across groups is different. We can assume the homogeneity of variances.</p>
+
+```{r}
+aov_residuals <- residuals(object = res.aov)
+shapiro.test(x = aov_residuals)
+```
+
+<p>The p-value is 0.1883. The residuals follow a normal distribution. </p>
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions for significance level = 0.05</b> <br> whether the mean values for socialization skills for the 5 groups for the amount of time spent with friends are all equal. </h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4><b>The p-value of the ANOVA test is 6.11*10<sup>-6</sup>.<br>At a significance level of 0.05 H<sub>0</sub> has to be rejected. </b></h4>
+  <h4>At least one mean value for one group is significantly different. <br> The Tukey HSD-Test showed significant differences between the group "<2hrs/week" and all other groups. There was no significant difference for the mean values for the other groups. </h4>
+  </td>
+</tr>
+</table>
+
+
+
+
+***
+
+<h2 id="Exercise_75"> Exercise 75 </h2>
+<p>- Use the dataset mtcars and apply a simple linear regression model to estimate the miles per gallon if the weight of the automobile is 3 (in 1000 lbs).
+<br>- Are the the assumptions met for linear regression?
+<br>- Find the coefficient of determination.
+<br>- Is there a significant relationship between the variables?
+<br>- Develop a 95% confidence interval of the mean miles per gallon for the weight of 3.
+<br>- Plot the residual of the simple linear regression model against the independent variable.
+<br>- Normal probability plot for the standardized residual. </p>
+
+
+```{r}
+str(mtcars)
+```
+
+<h3> Assumptions of simple linear regression</h3>
+<p>1. <b>Homogeneity of variance (homoscedasticity)</b>: the size of the error in our prediction doesn’t change significantly across the values of the independent variable
+<br>2. <b>Independence of observations</b>: the observations in the dataset were collected using statistically valid sampling methods, and there are no hidden relationships among observations.
+<br>3. <b>Normality</b>: The data follows a normal distribution. 
+<br>4. <b>Linearity</b>: The relationship between the independent and dependent variable is linear
+</p>
+
+<h3>1. Check for preconditions </h3>
+<p> We assume the independence of observations. </p>
+<p> Homogeneity of variance (homoscedasticity) will be checked by searching for a normal distribution of the residuals.(point 7) </p>
+
+<h3>1.1 Normality check </h3>
+```{r}
+shapiro_mpg = shapiro.test(mtcars$mpg)
+shapiro_mpg
+
+shapiro_wt=shapiro.test(mtcars$wt)
+shapiro_wt
+```
+
+<p>The shapiro test for both variables show a normal distribution.</p>
+
+<h3>1.2 Linear correlation </h3>
+```{r}
+cor(mtcars$mpg, mtcars$wt)
+```
+<p> The is a strong negative correlation. </p>
+
+<h3>2. Build a linear regression model</h3>
+```{r}
+wt_mpg.lm = lm(mpg ~ wt, data=mtcars)
+wt_mpg.lm
+```
+
+<h3>3. Linear regression equation</h3>
+```{r}
+coeffs = coefficients(wt_mpg.lm);
+coeffs
+```
+
+<p> The linear regression equation is y = -5.3444716 x + 37.2851262 </p>
+
+<h3>4. Confidence interval of mpg for the weight of 3 </h3>
+```{r}
+wt = 3
+mpg_wt3 = coeffs[1] + coeffs[2]*wt
+mpg_wt3
+
+df = data.frame(wt=3)
+predict(wt_mpg.lm, df, interval="confidence")
+
+```
+
+<p> The miles per gallon for a car with weight 3000 lbs is 21.25171. The lower nd upper bounds are 20.12444 and 22.37899</p>
+
+
+<h3>5. Visualize the model</h3>
+```{r}
+plot(mtcars$wt, mtcars$mpg, xlab="Weight", ylab="Miles per gallon", lwd = 3, col = adjustcolor("blue",alpha=0.7), main = "Linear Regression Model for Weight/MPG", sub = "Figure 4 - Linear Regression Model, Exercise 75")
+abline(wt_mpg.lm, col = "salmon", lty = 2, lwd = 3)
+abline(v = 3, lwd = 2, lty=2,col="lightgreen")
+abline(h = mpg_wt3, lwd = 2, lty=2,col="lightgreen")
+grid(col = "lightgray", lty = "dotted",
+     lwd = par("lwd"))
+legend(3.9, 34, legend = ("y = -5.3444716 x + 37.2851262"),
+       col="salmon",
+       lty=2, cex=0.8, lwd=1.5)
+legend(3.9, 31.37, legend = ("mpg for weight 3"),
+       col="lightgreen",
+       lty=2,cex=0.8, lwd=1.5)
+```
+
+
+<h3>6. Coefficient of determination</h3>
+<h3> The coefficient of determination is the r.squared element of the summary of the linear regression model. </h3>
+```{r}
+summary(wt_mpg.lm)$r.squared
+```
+<p>The coefficient of the determination is 0.7528328</p>
+
+
+<h3>7. Check the normality of the residuals <h3>
+
+```{r}
+residuals = resid(wt_mpg.lm)
+shapiro.test(residuals)
+```
+
+<p> The residuals are normal distributed. </p>
+
+***
+
+
+<h2 id="Exercise_76"> Exercise 76 </h2>
+<p>- Use the dataset incomehappy.txt and apply a simple linear regression model to estimate the happiness if the income is 6 (in 1000 Euro per month).
+<br>- Are the the assumptions met for linear regression?
+<br>- Find the coefficient of determination.
+<br>- Is there a significant relationship between the variables?
+<br>- Develop a 95% confidence interval of the mean happiness for the income of 6.
+<br>- Plot the residual of the simple linear regression model against the independent variable.
+<br>- Normal probability plot for the standardized residual.</p>
+
+<p>Load the dataset </p>
+```{r}
+income<-read.delim("C:\\_Privat\\_MSC_\\Skripten und Hü\\Statistics\\HW\\Datasets-20221012\\incomehappy.txt",stringsAsFactors=F)
+head(income)
+str(income)
+summary(income)
+```
+
+<h3> Assumptions of simple linear regression</h3>
+<p>1. <b>Homogeneity of variance (homoscedasticity)</b>: the size of the error in our prediction doesn’t change significantly across the values of the independent variable
+<br>2. <b>Independence of observations</b>: the observations in the dataset were collected using statistically valid sampling methods, and there are no hidden relationships among observations.
+<br>3. <b>Normality</b>: The data follows a normal distribution. 
+<br>4. <b>Linearity</b>: The relationship between the independent and dependent variable is linear
+</p>
+
+<h3>1. Check for preconditions </h3>
+<p> We assume the independence of observations. </p>
+<p> Homogeneity of variance (homoscedasticity) will be checked by searching for a normal distribution of the residuals.(point 7) </p>
+
+<h3>1.1 Normality check </h3>
+```{r}
+shapiro_income = shapiro.test(income$income)
+shapiro_income
+
+shapiro_happiness=shapiro.test(income$happiness)
+shapiro_happiness
+```
+
+<p>The shapiro test for both variables show a NOT normal distribution, but we have a total number of 498 observations.</p>
+
+<h3>1.2 Linear correlation </h3>
+```{r}
+cor(income$happiness, income$income)
+```
+<p> The is a strong positive correlation. </p>
+
+<h3>2. Build a linear regression model</h3>
+```{r}
+income.lm = lm(happiness ~ income, data=income)
+income.lm
+```
+
+<h3>3. Linear regression equation</h3>
+```{r}
+coeffs = coefficients(income.lm);
+coeffs
+```
+
+<p> The linear regression equation is y = 0.7138255 x + 0.2042704 </p>
+
+<h3>4. Confidence interval of income is 6 </h3>
+```{r}
+amount = 6 
+intc = coeffs[1] + coeffs[2]*amount
+intc
+
+df = data.frame(income=6)
+predict(income.lm, df, interval="confidence")
+```
+
+<p> The happiness for people having an income of 6 is predicted to be 4.487223. The lower and upper bounds are 4.40287 and 4.571577</p>
+
+
+<h3>5. Visualize the model</h3>
+```{r}
+plot(income$income, income$happiness, xlab="Income", ylab="Happiness", lwd = 1.5, col = adjustcolor("blue4",alpha=0.8), main = "Linear Regression Model for Income/Happiness", sub = "Figure 5 - Linear Regression Model, Exercise 76")
+abline(income.lm, col = "red", lty = 2, lwd = 3)
+abline(v = 6, lwd = 2, lty=2,col="lightgreen")
+abline(h = intc, lwd = 2, lty=2,col="lightgreen")
+grid(col = "lightgray", lty = "dotted",
+     lwd = par("lwd"))
+legend(1.5, 6.9, legend = ("y = 0.7138255 x + 0.2042704"),
+       col="red",
+       lty=2, cex=0.8, lwd=2)
+legend(1.5, 6.2, legend = ("happiness for income 6"),
+       col="lightgreen",
+       lty=2,cex=0.8, lwd=2)
+```
+
+
+<h3>6. Coefficient of determination</h3>
+<h3> The coefficient of determination is the r.squared element of the summary of the linear regression model. </h3>
+```{r}
+summary(income.lm)$r.squared
+```
+<p>The coefficient of the determination is 0.7493218</p>
+
+
+<h3>7. Check the normality of the residuals <h3>
+
+```{r}
+residuals = resid(income.lm)
+shapiro.test(residuals)
+```
+
+<p> The residuals are normal distributed. </p>
+
+
+
+
+***
+
+<h2 id="Exercise_79"> Exercise 79 </h2>
+<p>- Find the Pearson correlation coefficient of body weight
+and body height in the data set students.
+<br>- Is there any linear relationship between the variables?
+<br>- Test for significance of the correlation.
+</p>
+
+```{r}
+students<-read.delim("C:\\_Privat\\_MSC_\\Skripten und Hü\\Statistics\\HW\\Datasets-20221012\\students.txt",stringsAsFactors=F)
+head(students)
+```
+
+<h3>Scatter plot of Body Weight and Body Size</h3>
+
+```{r message=FALSE, warning=FALSE}
+ggscatter(students, x = "Weight_kg", y = "Size_cm", col = "steelblue", add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "Body Weight", ylab = "Body Size")+ theme_bw() + theme(legend.position="top") +
+ ggtitle("Scatter plot for weight and height") + labs(x = "Weight", y = "Height", caption = "Figure 6 - Scatterplot, Exercise 79")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+<h3> Test for normal distribution of the data </h3>
+
+```{r}
+shapiro.test(students$Weight_kg)
+```
+
+```{r message=FALSE, warning=FALSE}
+ggqqplot(students$Weight_kg, col = "steelblue", lwd = 2) + theme_bw() + theme(legend.position="top") + geom_qq_line(col = "red") +
+ ggtitle("Q-Q plot for Weight") + labs(x = "Theoretical distribution", y = "Sample distribution", caption = "Figure 7 - Q-Q plot, Exercise 79")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+
+```{r}
+shapiro.test(students$Size_cm)
+```
+
+```{r message=FALSE, warning=FALSE}
+ggqqplot(students$Size_cm, col = "steelblue", lwd = 2) + theme_bw() + theme(legend.position="top") + geom_qq_line(col = "red") +
+ ggtitle("Q-Q plot for Size") + labs(x = "Theoretical distribution", y = "Sample distribution", caption = "Figure 8 - Q-Q plot, Exercise 79")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+<h3> Correlation Test </h3>
+```{r}
+cor.test(students$Weight_kg, students$Size_cm,method = "pearson")
+```
+
+
+
+<table>
+  <tr> 
+    <th><h4><b> Pearson Correlation coefficient <br>of Body Weight and Body Height </b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4> The p-value of the test is 2.2 * 10<sup>16</sup>, which is less than the significance level alpha = 0.05. The weight and size are significantly positively correlated with a correlation coefficient of 0.7790491.</h4>
+  </td>
+</tr>
+</table>
+
+
+***
+
+<h2 id="Exercise_80"> Exercise 80 </h2>
+<p>- Find the Pearson correlation coefficient of negative mood
+and positive mood in the data set ICM.
+<br>- Is there any linear relationship between the variables?
+<br>- Test for significance of the correlation.
+</p>
+
+
+
+```{r}
+ICM<-read.delim("C:\\_Privat\\_MSC_\\Skripten und Hü\\Statistics\\HW\\Datasets-20221012\\ICM.txt",stringsAsFactors=F)
+head(ICM)
+```
+
+
+<h3>Scatter plot of Body Weight and Body Size</h3>
+```{r message=FALSE, warning=FALSE}
+ggscatter(ICM, x = "NegativeMood", y = "PositiveMood", col = "steelblue", add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "Negative Mood", ylab = "Positive Mood")+ theme_bw() + theme(legend.position="top") +
+ ggtitle("Scatter plot for positive/negative mood") + labs(x = "NegativeMood", y = "PositiveMood", caption = "Figure 9 - Scatterplot, Exercise 80")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+<h3> Test for normal distribution of the data </h3>
+
+```{r}
+shapiro.test(ICM$PositiveMood)
+```
+
+```{r message=FALSE, warning=FALSE}
+ggqqplot(ICM$PositiveMood, col = "steelblue", lwd = 2) + theme_bw() + theme(legend.position="top") + geom_qq_line(col = "red") +
+ ggtitle("Q-Q plot for positive mood") + labs(x = "Theoretical distribution", y = "Sample distribution", caption = "Figure 10 - Q-Q plot, Exercise 80")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+
+```{r}
+shapiro.test(ICM$NegativeMood)
+```
+
+```{r message=FALSE, warning=FALSE}
+ggqqplot(ICM$NegativeMood, col = "steelblue", lwd = 2) + theme_bw() + theme(legend.position="top") + geom_qq_line(col = "red") +
+ ggtitle("Q-Q plot for negative mood") + labs(x = "Theoretical distribution", y = "Sample distribution", caption = "Figure 11 - Q-Q plot, Exercise 80")+
+  theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+```{r}
+cor.test(ICM$NegativeMood, ICM$PositiveMood,method = "pearson")
+```
+
+
+<table>
+  <tr> 
+    <th><h4><b> Correlation coefficient <br>of Negative Mood and Positive Mood </b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4>he p-value of the test is 2.2*10<sup>16</sup>. The negative and positive Mood are significantly negatively correlated with a correlation coefficient of -0.6433565.</h4>
+  </td>
+</tr>
+</table>
+
+
+***
+
+<h2 id="Exercise_83"> Exercise 83 </h2>
+<p>- Calculate Spearman’s rho as correlation coefficient for the
+variables body weight and body height in the data set
+students.
+<br>- Test for significance of the correlation.
+</p>
+
+<p>Load and inspect the dataset</p>
+```{r message=FALSE, warning=FALSE}
+students<-read.delim("C:\\_Privat\\_MSC_\\Skripten und Hü\\Statistics\\HW\\Datasets-20221012\\students.txt",stringsAsFactors=F)
+str(students)
+head(students)
+inspect(students)
+```
+
+
+<h3>Calculate Spearman’s rho</h3>
+<p> Spearman's rho is a non-parametric measure of rank correlation. Spearman correlation between two variables is similar to Pearson correlation, but it is valid for monotonic relationships and doesn't require linearity.</p>
+```{r}
+cor.test(students$Weight_kg, students$Size_cm, method = "spearman", exact=FALSE)
+```
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4><b>The rho correlation coefficient between body weight and body height is 0.7740172. <br> The p-value is < 2.2 * 10<sup>-16</sup></b></h4>
+  <h4>The is a <b>statistically highly significant positive correlation</b> between the body weight and the body height of students. If the weight increases also the height increases. </h4>
+  </td>
+</tr>
+</table>
+
+
+
+***
+
+<h2 id="Exercise_84"> Exercise 84 </h2>
+<p>- Calculate Spearman’s rho as correlation coefficient for the
+variables negative mood and OHS in the data set ICM.
+<br>- Is there any linear relationship between the variables?
+<br>- Test for significance of the correlation.
+</p>
+
+<p>Load and inspect the dataset</p>
+```{r message=FALSE, warning=FALSE}
+ICM<-read.delim("C:\\_Privat\\_MSC_\\Skripten und Hü\\Statistics\\HW\\Datasets-20221012\\ICM.txt",stringsAsFactors=F)
+str(ICM)
+head(ICM)
+inspect(ICM)
+```
+
+<h3>Calculate Spearman’s rho</h3>
+<p> Spearman's rho is a non-parametric measure of rank correlation. Spearman correlation between two variables is similar to Pearson correlation, but it is valid for monotonic relationships and doesn't require linearity.</p>
+
+```{r}
+cor.test(ICM$NegativeMood, ICM$OHS, method = "spearman", exact=FALSE)
+
+```
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusions</b></h4> </th>
+</tr>
+<tr>
+  <td>
+    <h4><b>The rho correlation coefficient between the negative mood and OHS is -0.5725575.<br> The p-value is < 2.2 * 10<sup>-16</sup></b></h4>
+  <h4>The is a <b>statistically highly significant negative correlation</b> between the negative mood and the OHS. If the negative mood increases the OHS decreases. </h4>
+  </td>
+</tr>
+</table>
+
+***
+
+

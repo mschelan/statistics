@@ -1,0 +1,1310 @@
+---
+title: "APPDS - Statistics"
+subtitle: "HW 4 - 2022/11/17 - Schelander Martina"
+output:
+  html_document:
+    df_print: paged
+---
+<h2> Table of Contents </h2> 
+<ol>
+    <li>
+      <a href="#Exercise_33">
+      <span class="title">Exercise 33</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_34">
+      <span class="title">Exercise 34</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_36">
+      <span class="title">Exercise 36</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_37">
+      <span class="title">Exercise 37</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_38">
+      <span class="title">Exercise 38</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_39">
+      <span class="title">Exercise 39</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_41">
+      <span class="title">Exercise 41</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_42">
+      <span class="title">Exercise 42</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_43">
+      <span class="title">Exercise 43</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_46">
+      <span class="title">Exercise 46</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_49">
+      <span class="title">Exercise 49</span>
+      </a>
+    </li>
+    <li>
+      <a href="#Exercise_50">
+      <span class="title">Exercise 50</span>
+      </a>
+    </li>
+</ol>
+
+<style>
+table, th, td {
+  border:1px solid black;
+  padding: 4px;
+}
+tr:nth-child(odd) {
+  background-color: #E6F6F669;
+}
+th{
+  background-color: #D6EEEE;
+}
+</style>
+
+
+Prerequisites - Load libraries
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+library(mosaic)
+library(vcd)
+library(vcdExtra)
+library(tidyverse)
+library(gridExtra)
+library(knitr)
+library(latex2exp)
+```
+
+***
+
+<h2 id="Exercise_33"> Exercise 33 </h2>
+<p> A hardware store buys ceramic tiles from three producers, A, B
+and C. The manager of the hardware store draws a sample of
+1000 ceramic tiles per producer and determines the numbers of
+erroneous ceramic tiles:
+<br>- Producer A: 41 erroneous ceramic tiles
+<br>- Producer B: 21 erroneous ceramic tiles
+<br>- Producer C: 55 erroneous ceramic tiles
+<br>Do the producers deliver ceramic tiles of equal quality? α = 1% </p>
+
+<h3>Data Visualization</h3>
+```{r message=FALSE, warning=FALSE}
+
+Data_Exc33 <- matrix(c(41, 21, 55, 1000 - 41, 1000 - 21, 1000 - 55), ncol=2)
+dimnames(Data_Exc33) <- list(Producers = c("A", "B", "C"), Tiles = c("errors", "not errors"))
+kable(Data_Exc33)
+
+```
+
+```{r}
+vcd::mosaic(Data_Exc33, main = "Mosaicplot - Exercise 33", sub = 'Figure 1 - Mosaicplot, Exercise 33', sub_gp = gpar(fontface = "italic",fontsize = 10), color = TRUE, shade = TRUE, direction=c("v","h"),gp = gpar(fill=c('#2874A6', '#239B56', '#B7950B', '#AED6F1', '#ABEBC6', '#F9E79F')))
+```
+
+
+<h3> Step 1: Formulate Hypotheses </h3>
+<p><table>
+  <tr>
+    <th> Null Hypothesis </th>
+    <th> Alternative Hypothesis </th>
+  </tr>
+  <tr>
+    <td> All producers deliver the same quality of tiles. </td>
+    <td> Not all producers deliver the same quality of tiles. </td>
+  </tr>
+</table></p>
+
+<h4>Approach:</h4>
+<p>Since the single variable is nominal [error/no error], the observations are given as frequencies and we observe independent samples a Chi-Squared Test is the appropriate approach in this case. </p>
+
+<h3> Step 2: Calculate Test Statistics </h3>
+<p><table>
+  <tr>
+    <th> Average Error Rate </th>
+    <th> Average No Error Rate </th>
+  </tr>
+  <tr>
+    <td>
+      (41+21+55)/3000 = <b>0.039</b>
+    </td>
+    <td> 
+      (959+979+945)/3000 = <b>0.961</b>
+    </td>
+  </tr>
+</table></p>
+<p> Check for Validity:  0.961 + 0.039 = 1 </p>
+
+<p><table>
+  <tr>
+    <th> </th>
+    <th> Observed Errors </th>
+    <th> Expected Errors </th>
+    <th> Observed OK </th>
+    <th> Expected OK </th>
+  </tr>
+  <tr>
+    <td>Producer A</td>
+    <td>41</td>
+    <td>1000*0.039 = 39</td>
+    <td>959</td>
+    <td>1000*0.961 = 961</td>
+  </tr>
+  <tr>
+    <td>Producer B</td>
+    <td>21</td>
+    <td>1000*0.039 = 39</td>
+    <td>979</td>
+    <td>1000*0.961 = 961</td>
+  </tr>
+  <tr>
+    <td>Producer C</td>
+    <td>55</td>
+    <td>1000*0.039 = 39</td>
+    <td>945</td>
+    <td>1000*0.961 = 961</td>
+  </tr>
+</table></p>
+<p> X<sup>2</sup><sub>obs</sub>= <span>&Sigma;</span>((Observed-Expected)<sup>2</sup>/Expected)</p>
+<p> (41-39)<sup>2</sup>/39 + (21-39)<sup>2</sup>/39 + (55-39)<sup>2</sup>/39 + (959-961)<sup>2</sup>/961 + (979-961)<sup>2</sup>/961 + (945-961)<sup>2</sup>/961</p>
+<p>=<b>15,58205</b></p>
+
+
+<h4>Calculation in R</h4>
+<p>Column overall means for errors</p>
+```{r}
+errors_producer <- sum(Data_Exc33[, "errors"]) / sum(Data_Exc33)
+errors_producer
+```
+
+<p>Column overall means for non errors</p>
+```{r}
+not_errors_producer <- sum(Data_Exc33[, "not errors"])/sum(Data_Exc33)
+not_errors_producer
+```
+
+<p>Sum validation</p>
+```{r}
+sum = errors_producer + not_errors_producer
+sum
+```
+
+
+<h3>Calculation in R</h3>
+```{r}
+expected <- c((Data_Exc33[, "errors"] + Data_Exc33[, "not errors"]) * errors_producer,(Data_Exc33[, "errors"] + Data_Exc33[, "not errors"]) * not_errors_producer)
+```
+<p> Expected Values </p>
+```{r}
+table_expected <- matrix(expected, ncol=2)
+dimnames(table_expected) <- list(producer = c("Producer A", "Producer B", "Producer C"),produced = c("[errors]", "[not errors]"))
+table_expected
+
+```
+<p> Test Statistic </p>
+```{r}
+x <- sum((Data_Exc33 - expected)^2 / expected)
+x
+```
+
+<h3> Step 3: Determine the critical value </h3>
+<p> f = sample size(3 Producers) - 1 = 2 degrees of freedom </p>
+<p>X<sup>2</sup>-distribution with df=2 and prop=0.99:</p>
+
+<p>lower.tail = FALSE so we can use α=0.01 for prop=0.99</p>
+```{r}
+alpha <- 0.01
+df <- 2
+crit_val <- qchisq(alpha, df, lower.tail = FALSE)
+crit_val
+```
+
+<p>Critical value X<sup>2</sup><sub>f;1-α</sub> = <b>9.21034</b></p>
+
+
+```{r}
+plot_chisq <- function(sim_data, x, crit_val, title = "Chi-squared test - Simulation - Exercise 33"
+) {
+annotation_y_val <- max(sim_data$y) * 1/3
+annotation_y_val2 <- max(sim_data$y) * 1/4
+plt <- ggplot(sim_data, aes(x, y)) + ggtitle(title) + labs(y = "Density", caption = "Figure 2 - Chi-Squared Test - Simulation, Exercies 33") + geom_line() + geom_area(data = subset(sim_data, x >= crit_val),fill = "red", alpha = 0.5) + annotate("segment", x = crit_val, xend = crit_val,y = 0, yend = annotation_y_val,color = "red") + annotate("text",x = crit_val, y =annotation_y_val * 1.3,label = "chi-critical", parse = TRUE) + annotate("segment", x = x, xend = x,y = 0, yend = annotation_y_val2,color = "black") + annotate("text",x = x, y = annotation_y_val2 * 1.3, label = "chi-observed", parse = TRUE)+theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+theme(plot.title = element_text(hjust = 0.5))
+
+return(plt)}
+
+sim_data <- data.frame(density(rchisq(500, df))[c("x", "y")])
+plot_chisq(sim_data, x, crit_val)
+
+
+```
+```{r}
+p_value <- 1 - pchisq(x, df)
+p_value
+
+```
+<h3> Step 4: Result </h3>
+
+<p> for α = 0.01 = X<sup>2</sup><sub>obs</sub> > X<sup>2</sup><sub>f;1-α</sub> </p>
+<p><b>15,58205 > 9.21034 ⇒ Reject H<sub>0</sub></b></p>
+
+<table>
+  <tr>
+    <th> <h4><b> Conclusion </b></h4> </th>
+</tr>
+  <tr>
+    <td> <h4><b>At the significance level 0.01 we conclude that H<sub>0</sub> has to be rejected. The Producers do NOT deliver the same quality of ceramic tiles!</b></h4>
+ </td>
+  </tr>
+</table>
+
+
+***
+
+<h2 id="Exercise_34"> Exercise 34 </h2>
+<p>A hardware store buys plastic bags from three producers, A, B
+and C. The manager of the hardware store draws draws
+different samples per producer and determines the numbers of
+broken plastic bags:
+<br>Producer A: 6 broken plastic bags out of 125 samples
+<br>Producer B: 17 broken plastic bags out of 200 samples
+<br>Producer C: 10 broken plastic bags out of 325 samples
+<br>Do the producers deliver plastic bags of equal quality? α = 1% and α = 5%
+</p>
+
+
+<h3>Data Visualization</h3>
+
+```{r message=FALSE, warning=FALSE}
+
+Data_Exc34 <- matrix(c(6, 17, 10, 125 - 6, 200 - 17, 325 - 10), ncol=2)
+dimnames(Data_Exc34) <- list(Producers = c("A", "B", "C"), Bags = c("errors", "not errors"))
+kable(Data_Exc34)
+
+```
+
+```{r}
+vcd::mosaic(Data_Exc34, main = "Data frequencies - Exercise 34", sub = 'Figure 3 - Mosaicplot, Exercise 34', sub_gp = gpar(fontface = "italic",fontsize = 10), color = TRUE, shade = TRUE, direction=c("v","h"), gp = gpar(fill=c('#2874A6', '#239B56', '#B7950B', '#AED6F1', '#ABEBC6', '#F9E79F')))
+
+```
+
+<h3> Step 1: Formulate Hypotheses </h3>
+<p><table>
+  <tr>
+    <th> Null Hypothesis </th>
+    <th> Alternative Hypothesis </th>
+  </tr>
+  <tr>
+    <td> All producers deliver the same quality of plastic bags. </td>
+    <td> Not all producers deliver the same quality of plastic bags. </td>
+  </tr>
+</table></p>
+
+<h4>Approach:</h4>
+<p>Since the single variable is nominal [error/no error], the observations are given as frequencies and we observe independent samples a Chi-Squared Test is the appropriate approach in this case. </p>
+
+<h3> Step 2: Calculate Test Statistics </h3>
+<p><table>
+  <tr>
+    <th> Average Error Rate </th>
+    <th> Average No Error Rate </th>
+  </tr>
+  <tr>
+    <td>
+      (6+17+10)/(125+200+325) = <b>0.05077</b>
+    </td>
+    <td> 
+      (119+183+315)/(125+200+325) = <b>0.94923</b>
+    </td>
+  </tr>
+</table></p>
+<p> Check for Validity: 0.05077 + 0.94923 = 1 </p>
+
+<p><table>
+  <tr>
+    <th> </th>
+    <th> Observed Errors </th>
+    <th> Expected Errors </th>
+    <th> Observed OK </th>
+    <th> Expected OK </th>
+  </tr>
+  <tr>
+    <td>Producer A</td>
+    <td>6</td>
+    <td>125*0.05077 = 6,34625</td>
+    <td>119</td>
+    <td>125*0.94923 = 118,65</td>
+  </tr>
+  <tr>
+    <td>Producer B</td>
+    <td>17</td>
+    <td>200*0.05077 = 10,15</td>
+    <td>183</td>
+    <td>200*0.94923 = 189,84</td>
+  </tr>
+  <tr>
+    <td>Producer C</td>
+    <td>10</td>
+    <td>325*0.05077 = 16,5</td>
+    <td>315</td>
+    <td>325*0.94923 = 308,49</td>
+  </tr>
+</table></p>
+<p> X<sup>2</sup><sub>obs</sub>= <span>&Sigma;</span>((Observed-Expected)<sup>2</sup>/Expected)</p>
+<p> (6-6,34625)<sup>2</sup>/6,34625 + (17-10,15)<sup>2</sup>/10,15 + (10-16,5)<sup>2</sup>/16,5 + (119-118,65)<sup>2</sup>/118,65 + (183-189,84)<sup>2</sup>/189,84 + (315-308,49)<sup>2</sup>/308,49</p>
+<p>=<b>7.587263</b></p>
+
+
+
+
+<h4>Calculation in R</h4>
+<p>Column overall means for errors</p>
+```{r}
+errors_producer <- sum(Data_Exc34[, "errors"]) / sum(Data_Exc34)
+errors_producer
+```
+
+<p>Column overall means for non errors</p>
+```{r}
+not_errors_producer <- sum(Data_Exc34[, "not errors"])/sum(Data_Exc34)
+not_errors_producer
+```
+
+<p>Sum validation</p>
+```{r}
+sum = errors_producer + not_errors_producer
+sum
+```
+
+
+<h3>Calculation in R</h3>
+```{r}
+expected <- c((Data_Exc34[, "errors"] + Data_Exc34[, "not errors"]) * errors_producer,(Data_Exc34[, "errors"] + Data_Exc34[, "not errors"]) * not_errors_producer)
+```
+
+<p>Expected Values</p>
+```{r}
+table_expected <- matrix(expected, ncol=2)
+dimnames(table_expected) <- list(producer = c("Producer A", "Producer B", "Producer C"),produced = c("errors", "not errors"))
+table_expected
+
+```
+<p> Test Statistic </p>
+```{r}
+x <- sum((Data_Exc34 - expected)^2 / expected)
+x
+```
+
+<h3> Step 3: Determine the critical value </h3>
+<p> f = sample size(3 Producers) - 1 = 2 degrees of freedom </p>
+<br>
+<p>X<sup>2</sup>-distribution with df=2 and α=0.01</p>
+<p>lower.tail = FALSE so we can use α=0.01</p>
+```{r}
+alpha <- 0.01
+df <- 2
+crit_val <- qchisq(alpha, df, lower.tail = FALSE)
+crit_val
+```
+
+<p>Critical value X<sup>2</sup><sub>f;1-α</sub> = <b>9.21034</b></p>
+
+<br>
+<p>X<sup>2</sup>-distribution with df=2 and α=0.05</p>
+<p>lower.tail = FALSE so we can use α=0.01</p>
+```{r}
+alpha <- 0.05
+df <- 2
+crit_val <- qchisq(alpha, df, lower.tail = FALSE)
+crit_val
+```
+
+<p>Critical value X<sup>2</sup><sub>f;1-α</sub> = <b>5.991465</b></p>
+
+
+```{r}
+plot_chisq <- function(sim_data, x, crit_val, title = "Chi-squared test - Simulation - Exercise 34"
+) {
+annotation_y_val <- max(sim_data$y) * 1/3
+annotation_y_val2 <- max(sim_data$y) * 1/4
+plt <- ggplot(sim_data, aes(x, y)) + ggtitle(title) + labs(y = "Density", caption="Figure 4 - Chi-Squared Test - Simulation, Exercies 34") + geom_line() + geom_area(data = subset(sim_data, x >= crit_val),fill = "red", alpha = 0.5) + annotate("segment", x = crit_val, xend = crit_val,y = 0, yend = annotation_y_val,color = "red") + annotate("text",x = crit_val, y =annotation_y_val * 1.3,label = "chi-critical", parse = TRUE) + annotate("segment", x = x, xend = x,y = 0, yend = annotation_y_val2,color = "black") + annotate("text",x = x, y = annotation_y_val2 * 1.3, label = "chi-observed", parse = TRUE)+theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+theme(plot.title = element_text(hjust = 0.5))
+return(plt)}
+
+sim_data <- data.frame(density(rchisq(500, df))[c("x", "y")])
+plot_chisq(sim_data, x, crit_val)
+
+
+```
+```{r}
+p_value <- 1 - pchisq(x, df)
+p_value
+
+```
+<h3> Step 4: Result </h3>
+
+<p> for α = 0.01 = X<sup>2</sup><sub>obs</sub> > X<sup>2</sup><sub>f;1-α</sub> </p>
+<p><b>7.587263 < 9.21034 ⇒ Keep H<sub>0</sub></b></p>
+
+<p> for α = 0.05 = X<sup>2</sup><sub>obs</sub> > X<sup>2</sup><sub>f;1-α</sub> </p>
+<p><b>7.587263 > 5.991465 ⇒ Reject H<sub>0</sub></b></p>
+
+<table>
+  <tr>
+    <th> <h4><b> Conclusion for α = 1% </b></h4> </th>
+    <th> <h4><b> Conclusion for α = 5% </b></h4> </th>
+</tr>
+  <tr>
+    <td> <h4><b>At the significance level 0.01 we conclude that H<sub>0</sub> will be accepted. The p value is above the significance level of 0.01 and we keep the null hypothesis, which states that all producers deliver the same quality of plastic bags.</b></h4>
+ </td>
+     <td> <h4><b>At the significance level 0.05 we conclude that H<sub>0</sub> has to be rejected. The Producers deliver significantly different qualities of plastic bags!</b></h4>
+ </td>
+  </tr>
+</table>
+
+
+
+***
+
+
+<h2 id="Exercise_36"> Exercise 36 </h2>
+<p>Young adults were asked about their satisfaction with their own
+character and their own family situation.
+<br>
+<table>
+  <tr>
+    <th> </th>
+    <th> Family OK </th>
+    <th> Family not OK </th>
+  </tr>
+  <tr>
+    <td> Happy with own character </td>
+    <td> 11 </td>
+    <td> 107 </td>
+  </tr>
+  <tr>
+    <td> Unhappy with own character </td>
+    <td> 60 </td>
+    <td> 94 </td>
+  </tr>
+</table>
+<br>Use a Chi-squared test to determine whether there was a
+connection between these two variables.
+<br>1: α = 1%
+<br>2: α = 5%
+</p)
+
+
+<h3>Data Visualization</h3>
+
+```{r message=FALSE, warning=FALSE}
+
+Data_Exc36 <- matrix(c(11, 60, 107, 94), ncol=2)
+dimnames(Data_Exc36) <- list("Happyness with own character" = c("Happy with own character", "Unhappy with own character"), Famliy = c("Family OK", "Family not OK"))
+kable(Data_Exc36)
+
+```
+
+```{r}
+dimnames(Data_Exc36) <- list("Happyness with own character" = c("Happy", "Unhappy"), Famliy = c("OK", "Not OK"))
+vcd::mosaic(Data_Exc36, main = "Data frequencies - Exercise 36", sub = 'Figure 5 - Mosaicplot, Exercise 36', sub_gp = gpar(fontface = "italic",fontsize = 10), color = TRUE, shade = TRUE, direction=c("v","h"), gp = gpar(fill=c('#2874A6', '#B7950B', '#AED6F1', '#F9E79F')), labeling= labeling_border(rot_labels = c(0,0,0,90),offset_varnames = c(0.5,0.5,0,0)
+      ))
+
+```
+
+<h3> Step 1: Formulate Hypotheses </h3>
+<p><table>
+  <tr>
+    <th> Null Hypothesis </th>
+    <th> Alternative Hypothesis </th>
+  </tr>
+  <tr>
+    <td> People coming from different Familiy situations (OK/NOK) are equally happy. There is not connection between the two variables, [Family OK/Not Ok] and [Happy / Unhappy with own character] </td>
+    <td> There is a connection between the two variables. </td>
+  </tr>
+</table></p>
+
+<h4>Approach:</h4>
+<p>Since the variables in consideration are nominal [Happy/Unhappy] and [Family OK/Family Not OK], the observations are given as frequencies and we observe independent samples a Chi-Squared Fourfold Test is the appropriate approach in this case. </p>
+
+<h3> Step 2: Calculate Test Statistics </h3>
+
+```{r}
+numerator <- sum(Data_Exc36)*(11*94-60*107)^2
+numerator
+denominator <- sum(Data_Exc36["Happy", ])*sum(Data_Exc36["Unhappy", ])*sum(Data_Exc36[ ,"OK"])*sum(Data_Exc36[ ,"Not OK"])
+denominator
+test_statistics_Exc36 <- numerator / denominator
+test_statistics_Exc36
+```
+<p>So the observed valuer is X<sup>2</sup><sub>obs</sub>=<b>30.42597</b></p>
+
+
+<h3> Step 3: Determine the critical value </h3>
+<p> f = sample size-1 = 2-1 = 1 degrees of freedom </p>
+<br>
+<p>X<sup>2</sup>-distribution with df=1, prop=0.99 and α=0.01</p>
+<p>lower.tail = FALSE so we can use α=0.01</p>
+```{r}
+alpha <- 0.01
+df <- 1
+crit_val <- qchisq(alpha, df, lower.tail = FALSE)
+crit_val
+```
+
+<p>Critical value X<sup>2</sup><sub>f;1-α</sub> = <b>6.634897</b></p>
+
+<br>
+<p>X<sup>2</sup>-distribution with df=1, prop=0.95 and α=0.05</p>
+<p>lower.tail = FALSE so we can use α=0.01</p>
+```{r}
+alpha <- 0.05
+df <- 1
+crit_val <- qchisq(alpha, df, lower.tail = FALSE)
+crit_val
+```
+
+<p>Critical value X<sup>2</sup><sub>f;1-α</sub> = <b>3.841459</b></p>
+
+
+<h3> Step 4: Result </h3>
+
+<p> for α = 0.01 = X<sup>2</sup><sub>obs</sub> > X<sup>2</sup><sub>f;1-α</sub> </p>
+<p><b>30.42597 > 6.634897 ⇒ Reject H<sub>0</sub></b></p>
+
+<p> for α = 0.05 = X<sup>2</sup><sub>obs</sub> > X<sup>2</sup><sub>f;1-α</sub> </p>
+<p><b>30.42597 > 3.841459 ⇒ Reject H<sub>0</sub></b></p>
+
+<table>
+ <tr>
+    <th><h4><b> Conclusion for α = 1% </b></h4> </th>
+    <th><h4><b> Conclusion for α = 5% </b></h4> </th>
+</tr>
+  <tr>
+    <td> 
+<h4><b>At the significance level 0.01 we conclude that H<sub>0</sub> has to be rejected.</h4> 
+<h4>There is a significant relation between the happiness of people and their Family situation being OK or not OK. People coming from a 'OK'-family situation are happier with their own character than people coming from a family situation that is not OK.</b></h4>
+ </td>
+     <td> 
+<h4><b>At the significance level 0.05 we conclude that H<sub>0</sub> has to be rejected.</h4>
+<h4>There is a significant relation between the happiness of people and their Family situation being OK or not OK. People coming from a 'OK'-family situation are happier with their own character than people coming from a family situation that is not OK.</b></h4>
+ </td>
+  </tr>
+</table>
+
+
+***
+
+
+<h2 id="Exercise_37"> Exercise 37 </h2>
+<p>70 engineers and 30 sales men applied for a certain job
+position. The company categorized them into two classes:
+’suitable’ and ’unsuitable’.
+<br>
+<table>
+  <tr>
+    <th> </th>
+    <th> suitable </th>
+    <th> unsuitable </th>
+  </tr>
+  <tr>
+    <td> Engineer </td>
+    <td> 34 </td>
+    <td> 36 </td>
+  </tr>
+  <tr>
+    <td> Sales man </td>
+    <td> 26 </td>
+    <td> 4 </td>
+  </tr>
+</table>
+<br>Use a Chi-squared test to
+determine whether there was a connection between these two
+variables.
+<br>1: α = 1%
+<br>2: α = 5%
+</p)
+
+<h3>Data Visualization</h3>
+
+```{r message=FALSE, warning=FALSE}
+
+Data_Exc37 <- matrix(c(34, 26, 36, 4), ncol=2)
+dimnames(Data_Exc37) <- list("Applicant Type" = c("Engineer", "Sales man"), Suitability = c("suitable", "unsuitable"))
+kable(Data_Exc37)
+
+```
+
+```{r}
+vcd::mosaic(Data_Exc37, main = "Data frequencies - Exercise 37", sub = 'Figure 6 - Mosaicplot, Exercise 37', sub_gp = gpar(fontface = "italic",fontsize = 10), color = TRUE, shade = TRUE, direction=c("v","h"), gp = gpar(fill=c('#2874A6', '#B7950B', '#AED6F1', '#F9E79F')), labeling= labeling_border(rot_labels = c(0,0,0,90),offset_varnames = c(0.5,0.5,0,0)
+      ))
+
+```
+
+<h3> Step 1: Formulate Hypotheses </h3>
+<p><table>
+  <tr>
+    <th> Null Hypothesis </th>
+    <th> Alternative Hypothesis </th>
+  </tr>
+  <tr>
+    <td> There is not connection between the two variables, profession and suitability for the job position considered in this example. </td>
+    <td> There is a connection between the two variables. The profession and the suitability for the job position are related. </td>
+  </tr>
+</table></p>
+
+<h4>Approach:</h4>
+<p>Since the variables in consideration are nominal [suitable/not suitable] [Engineer/Sales man], the observations are given as frequencies and we observe independent samples a Chi-Squared Fourfold Test is the appropriate approach in this case. </p>
+
+<h3> Step 2: Calculate Test Statistics </h3>
+
+```{r}
+numerator <- sum(Data_Exc37)*(34*4-26*36)^2
+numerator
+denominator <- sum(Data_Exc37["Engineer", ])*sum(Data_Exc37["Sales man", ])*sum(Data_Exc37[ ,"suitable"])*sum(Data_Exc37[ ,"unsuitable"])
+denominator
+test_statistics_Exc37 <- numerator / denominator
+test_statistics_Exc37
+```
+<p>So the observed value is X<sup>2</sup><sub>obs</sub>=<b>12.69841</b></p>
+
+
+<h3> Step 3: Determine the critical value </h3>
+<p> f = sample size-1 = 2-1 = 1 degree of freedom </p>
+<br>
+<p>X<sup>2</sup>-distribution with df=1, prop=0.99 and α=0.01</p>
+<p>lower.tail = FALSE so we can use α=0.01</p>
+```{r}
+alpha <- 0.01
+df <- 1
+crit_val <- qchisq(alpha, df, lower.tail = FALSE)
+crit_val
+```
+
+<p>Critical value X<sup>2</sup><sub>f;1-α</sub> = <b>6.634897</b></p>
+
+<br>
+<p>X<sup>2</sup>-distribution with df=1, prop=0.95 and α=0.05</p>
+<p>lower.tail = FALSE so we can use α=0.01</p>
+```{r}
+alpha <- 0.05
+df <- 1
+crit_val <- qchisq(alpha, df, lower.tail = FALSE)
+crit_val
+```
+
+<p>Critical value X<sup>2</sup><sub>f;1-α</sub> = <b>3.841459</b></p>
+
+
+<h3> Step 4: Result </h3>
+
+<p> for α = 0.01 = X<sup>2</sup><sub>obs</sub> > X<sup>2</sup><sub>f;1-α</sub> </p>
+<p><b>12.69841 > 6.634897 ⇒ Reject H<sub>0</sub></b></p>
+
+<p> for α = 0.05 = X<sup>2</sup><sub>obs</sub> > X<sup>2</sup><sub>f;1-α</sub> </p>
+<p><b>12.69841 > 3.841459 ⇒ Reject H<sub>0</sub></b></p>
+
+<table>
+  <tr> 
+    <th><h4><b> Conclusion for α = 1% </b></h4> </th>
+    <th><h4><b> Conclusion for α = 5% </b></h4> </th>
+</tr>
+  <tr>
+    <td> 
+<h4><b>At the significance level 0.01 we conclude that H<sub>0</sub> has to be rejected. </h4>
+<h4>There is a significant relation between the professions Engineer and Sales man for the offered Job position. Sales man are significantly more suitable for the offered job position than Engineers are.</b></h4>
+</td>
+     <td>
+<h4><b>At the significance level 0.05 we conclude that H<sub>0</sub> has to be rejected. </h4>
+<h4>There is a significant relation between the professions Engineer and Sales man for the offered Job position. Sales man are significantly more suitable for the offered job position than Engineers are.</b></h4></td>
+  </tr>
+</table>
+
+
+
+
+***
+
+<h2 id="Exercise_38"> Exercise 38 </h2>
+<p>70 engineers and 30 sales men applied for a certain job
+position. The company categorized them into two classes:
+’suitable’ and ’unsuitable’.
+<br>
+<table>
+  <tr>
+    <th> </th>
+    <th> suitable </th>
+    <th> unsuitable </th>
+  </tr>
+  <tr>
+    <td> Engineer </td>
+    <td> 48 </td>
+    <td> 22 </td>
+  </tr>
+  <tr>
+    <td> Sales man </td>
+    <td> 20 </td>
+    <td> 10 </td>
+  </tr>
+</table>
+<br>Use a Chi-squared test to
+determine whether there was a connection between these two
+variables.
+<br>1: α = 1%
+<br>2: α = 5%
+</p)
+
+<h3>Data Visualization</h3>
+
+```{r message=FALSE, warning=FALSE}
+
+Data_Exc38 <- matrix(c(48, 20, 22, 10), ncol=2)
+dimnames(Data_Exc38) <- list("Applicant Type" = c("Engineer", "Sales man"), Suitability = c("suitable", "unsuitable"))
+kable(Data_Exc38)
+
+```
+
+```{r}
+vcd::mosaic(Data_Exc38, main = "Data frequencies - Exercise 38", sub = 'Figure 7 - Mosaicplot, Exercise 38', sub_gp = gpar(fontface = "italic",fontsize = 10), color = TRUE, shade = TRUE, direction=c("v","h"), gp = gpar(fill=c('#2874A6', '#B7950B', '#AED6F1', '#F9E79F')), labeling= labeling_border(rot_labels = c(0,0,0,90),offset_varnames = c(0.5,0.5,0,0)
+      ))
+
+```
+
+<h3> Step 1: Formulate Hypotheses </h3>
+<p><table>
+  <tr>
+    <th> Null Hypothesis </th>
+    <th> Alternative Hypothesis </th>
+  </tr>
+  <tr>
+    <td> There is not connection between the two variables, profession and suitability for the job position considered in this example. </td>
+    <td> There is a connection between the two variables. The profession and the suitability for the job position are related. </td>
+  </tr>
+</table></p>
+
+<h4>Approach:</h4>
+<p>Since the variables in consideration are nominal [suitable/not suitable] [Engineer/Sales man], the observations are given as frequencies and we observe independent samples a Chi-Squared Fourfold Test is the appropriate approach in this case. </p>
+
+<h3> Step 2: Calculate Test Statistics </h3>
+
+```{r}
+numerator <- sum(Data_Exc38)*(48*10-20*22)^2
+numerator
+denominator <- sum(Data_Exc38["Engineer", ])*sum(Data_Exc38["Sales man", ])*sum(Data_Exc38[ ,"suitable"])*sum(Data_Exc38[ ,"unsuitable"])
+denominator
+test_statistics_Exc38 <- numerator / denominator
+test_statistics_Exc38
+```
+<p>So the observed value is X<sup>2</sup><sub>obs</sub>=<b>0.03501401</b></p>
+
+
+<h3> Step 3: Determine the critical value </h3>
+<p> f = sample size-1 = 2-1 = 1 degree of freedom </p>
+<br>
+<p>X<sup>2</sup>-distribution with df=1, prop=0.99 and α=0.01</p>
+<p>lower.tail = FALSE so we can use α=0.01</p>
+```{r}
+alpha <- 0.01
+df <- 1
+crit_val <- qchisq(alpha, df, lower.tail = FALSE)
+crit_val
+```
+
+<p>Critical value X<sup>2</sup><sub>f;1-α</sub> = <b>6.634897</b></p>
+
+<br>
+<p>X<sup>2</sup>-distribution with df=1, prop=0.95 and α=0.05</p>
+<p>lower.tail = FALSE so we can use α=0.01</p>
+```{r}
+alpha <- 0.05
+df <- 1
+crit_val <- qchisq(alpha, df, lower.tail = FALSE)
+crit_val
+```
+
+<p>Critical value X<sup>2</sup><sub>f;1-α</sub> = <b>3.841459</b></p>
+
+
+<h3> Step 4: Result </h3>
+
+<p> for α = 0.01 = X<sup>2</sup><sub>obs</sub> > X<sup>2</sup><sub>f;1-α</sub> </p>
+<p><b>0.03501401 < 6.634897 ⇒ Reject H<sub>0</sub></b></p>
+
+<p> for α = 0.05 = X<sup>2</sup><sub>obs</sub> > X<sup>2</sup><sub>f;1-α</sub> </p>
+<p><b>0.03501401 < 3.841459 ⇒ Reject H<sub>0</sub></b></p>
+
+<table>
+  <tr>
+    <th><h4><b> Conclusion for α = 1% </b></h4> </th>
+    <th><h4><b> Conclusion for α = 5% </b></h4> </th>
+</tr>
+  <tr>
+    <td>
+<h4><b>At the significance level 0.01 we conclude that H<sub>0</sub> has to be accepted. </h4>
+<h4>There is no relation between the professions Engineer and Sales man for the suitability of the offered Job position. Sales man and Engineers are equally suitable for the offered job position.</b></h4>
+</td>
+     <td>
+<h4><b>At the significance level 0.05 we conclude that H<sub>0</sub> has to be accepted. </h4>
+<h4>There is no relation between the professions Engineer and Sales man for the suitability of the offered Job position. Sales man and Engineers are equally suitable for the offered job position.</b></h4></td>
+  </tr>
+</table>
+
+
+
+***
+
+<h2 id="Exercise_39"> Exercise 39 </h2>
+<p>Use the dataset ’tips’.
+<br>Is there an association between smoking and the time of
+the day (lunch or dinner)?
+</p>
+
+
+<h3> Load the dataset </h3>
+```{r message=FALSE, warning=FALSE}
+tips<-read.csv2("C:\\_Privat\\_MSC_\\Skripten und Hü\\Statistics\\HW\\tips.csv")
+```
+
+```{r}
+str(tips)
+tally(~smoker | time, data = tips)
+```
+
+
+<h3>Data Visualization</h3>
+
+```{r message=FALSE, warning=FALSE}
+matrix_smoker_time <- tally(~smoker | time, data = tips)
+Data_Exc39 <- matrix(c(matrix_smoker_time), ncol=2)
+dimnames(Data_Exc39) <- list(Smoker = c("No", "Yes"),"Time of Day" = c("Dinner", "Lunch"))
+kable(Data_Exc39)
+```
+
+```{r}
+vcd::mosaic(Data_Exc39, main = "Data frequencies - Exercise 39", sub = 'Figure 8 - Mosaicplot, Exercise 39', sub_gp = gpar(fontface = "italic",fontsize = 10), color = TRUE, shade = TRUE, direction=c("h","v"), gp = gpar(fill=c('#2874A6', '#B7950B', '#AED6F1', '#F9E79F')), labeling= labeling_border(rot_labels = c(0,0,0,90),offset_varnames = c(0.5,0.5,0,0)
+      ))
+
+```
+
+<h3> Hypotheses </h3>
+<p><table>
+  <tr>
+    <th> Null Hypothesis </th>
+    <th> Alternative Hypothesis </th>
+  </tr>
+  <tr>
+    <td> There is not connection between the time of day and the smoking habit. </td>
+    <td> There is a connection between the two variables 'Time of day' and 'Smoker'. The time of day as an effect on the smoking behaviour. </td>
+  </tr>
+</table></p>
+
+
+```{r}
+xchisq.test(smoker ~ time, data = tips)
+```
+
+
+<h3> Result </h3>
+
+<p> for α = 0.05 = X<sup>2</sup><sub>obs</sub> > X<sup>2</sup><sub>f;1-α</sub> </p>
+<p><b>0.7359839 < 3.841459 ⇒ Accept H<sub>0</sub></b></p>
+
+<table>
+  <tr>
+    <th>
+<h4><b> Conclusion </b></h4></th>
+</tr>
+  <tr>
+    <td>
+<h4><b>At the significance level 0.05 we conclude that H<sub>0</sub> is accepted. There is no connection between the smoking behavior and the time of day. </b></h4>
+ </td>
+  </tr>
+</table>
+
+
+
+***
+
+
+<h2 id="Exercise_41"> Exercise 41 </h2>
+<p>Use the dataset ’ICM’.
+<br>Is there an association between gender and education?
+</p>
+
+
+```{r message=FALSE, warning=FALSE}
+ICM<-read.delim("C:\\_Privat\\_MSC_\\Skripten und Hü\\Statistics\\HW\\Datasets-20221012\\ICM.txt",stringsAsFactors=F)
+```
+
+
+```{r}
+str(ICM)
+unique(ICM$Highest_level_of_education)
+```
+
+<h3>Data Visualization</h3>
+
+```{r message=FALSE, warning=FALSE}
+Data_Exc41 <- tally(~Gender | Highest_level_of_education, data = ICM)
+dimnames(Data_Exc41) <- list(Gender = c("female", "male"),Education = c("College", "HighSchool", "none", "University"))
+kable(Data_Exc41)
+```
+
+```{r}
+vcd::mosaic(Data_Exc41, main = "Data frequencies - Exercise 41", sub = 'Figure 9 - Mosaicplot, Exercise 41', sub_gp = gpar(fontface = "italic",fontsize = 10), color = TRUE, shade = TRUE, direction=c("v","h"), gp = gpar(fill=c('#2874A6', '#B7950B', '#AED6F1', '#F9E79F')), labeling= labeling_border(rot_labels = c(0),offset_varnames = c(0,4),offset_labels=c(left=1.5)))
+```
+
+<h3> Hypotheses </h3>
+<p><table>
+  <tr>
+    <th> Null Hypothesis </th>
+    <th> Alternative Hypothesis </th>
+  </tr>
+  <tr>
+    <td> There is not connection between the highest level of education and gender. </td>
+    <td> There is a connection between the two variables 'highest level of education' and 'gender'.</td>
+  </tr>
+</table></p>
+
+
+```{r}
+xchisq.test(Gender ~ Highest_level_of_education, data = ICM)
+```
+<table>
+  <tr>
+    <th>
+<h3><b> Conclusion </b></h3></th>
+</tr>
+  <tr>
+    <td>
+<h4><b>At the significance level 0.05 we conclude that H<sub>0</sub> is accepted.</h4>
+<h4>p is 13,337% which is higher than the α-level of 5%. There is no connection between the highest level of education and gender. </b></h4>
+ </td>
+  </tr>
+</table>
+
+***
+
+<h2 id="Exercise_42"> Exercise 42 </h2>
+<p>Use the dataset ’ICM’.
+<br>Is there an association between education and smoking?
+</p>
+
+```{r}
+str(ICM)
+unique(ICM$Highest_level_of_education)
+```
+
+
+<h3>Data Visualization</h3>
+
+```{r message=FALSE, warning=FALSE}
+Data_Exc42 <- tally(~Highest_level_of_education | Do_you_smoke, data = ICM)
+dimnames(Data_Exc42) <- list(Education = c("College", "HighSchool", "none", "University"), Smoking = c("No","Yes"))
+kable(Data_Exc42)
+```
+
+```{r}
+vcd::mosaic(Data_Exc42, main = "Data frequencies - Exercise 42", sub = 'Figure 10 - Mosaicplot, Exercise 42', sub_gp = gpar(fontface = "italic",fontsize = 10), color = TRUE, shade = TRUE, direction=c("h","v"), gp = gpar(fill=c('#2874A6', '#B7950B', '#AED6F1', '#F9E79F')), labeling= labeling_border(rot_labels = c(0,0),offset_varnames = c(0,4),offset_labels=c(left=1.5)))
+```
+
+<h3> Hypotheses </h3>
+<p><table>
+  <tr>
+    <th> Null Hypothesis </th>
+    <th> Alternative Hypothesis </th>
+  </tr>
+  <tr>
+    <td> There is not connection between the highest level of education and smoking behavior. </td>
+    <td> There is a connection between the two variables 'highest level of education' and 'smoking behavior'.</td>
+  </tr>
+</table></p>
+
+
+```{r}
+xchisq.test(Highest_level_of_education ~ Do_you_smoke, data = ICM)
+```
+<table>
+  <tr>
+    <th>
+<h4><b> Conclusion </b></h4></th>
+</tr>
+  <tr>
+    <td>
+<h4><b>At the significance level 0.05 we conclude that H<sub>0</sub> is accepted.</h4>
+<h4>p is 20,21% which is higher than the α-level of 5%. There is no connection between the highest level of education and the smoking behavior. </b></h4>
+</td>
+  </tr>
+</table>
+***
+
+
+<h2 id="Exercise_43"> Exercise 43 </h2>
+<p>Use the dataset ’ICM’.
+<br>Is there an association between the transport used to get
+to work and the time spent with social media?
+</p>
+
+
+```{r}
+str(ICM)
+unique(ICM$Transport)
+unique(ICM$Socialmediahours)
+```
+
+
+<h3>Data Visualization</h3>
+
+```{r message=FALSE, warning=FALSE}
+Data_Exc43 <- tally(~Transport | Socialmediahours, data = ICM)
+dimnames(Data_Exc43) <- list(Transport = c("PublicTransport","Car","Walk","Bicycle"), Socialmediahours = c("1.5-3","<1.5","3-5",">5" ))
+kable(Data_Exc43)
+```
+
+```{r}
+vcd::mosaic(Data_Exc43, main = "Data frequencies - Exercise 43", sub = 'Figure 11 - Mosaicplot, Exercise 43', sub_gp = gpar(fontface = "italic",fontsize = 10), color = TRUE, shade = TRUE, direction=c("h","v"), gp = gpar(fill=c('#2874A6', '#B7950B', '#AED6F1', '#F9E79F')), labeling= labeling_border(rot_labels = c(0,0),offset_varnames = c(0,5),offset_labels=c(0,2)))
+```
+
+<h3> Hypotheses </h3>
+<p><table>
+  <tr>
+    <th> Null Hypothesis </th>
+    <th> Alternative Hypothesis </th>
+  </tr>
+  <tr>
+    <td> There is not connection between the transport used to get to work and the hours spent using social media. </td>
+    <td> There is a connection between the two variables 'transport used to get to work' and 'hours spent using social media'.</td>
+  </tr>
+</table></p>
+
+
+```{r}
+xchisq.test(Transport ~ Socialmediahours, data = ICM)
+```
+<table>
+  <tr>
+    <th> 
+<h4><b> Conclusion </b></h4> </th>
+</tr>
+  <tr>
+    <td> 
+<h4><b>At the significance level 0.05 we conclude that H<sub>0</sub> is rejected. p is 0,5% which is smaller than the α-level of 5%. There is a significant connection between the transport used to get to work and the hours spend on social media. </b></h4>
+</td>
+  </tr>
+</table>
+
+***
+
+
+<h2 id="Exercise_46"> Exercise 46 </h2>
+<p>Use the dataset ’OHS 2020 paired’.
+<br>Is there a statistically significant difference between the
+happiness of the students between the three time points?
+</p>
+
+```{r message=FALSE, warning=FALSE}
+OHS_2020_paired<-read.delim("C:\\_Privat\\_MSC_\\Skripten und Hü\\Statistics\\HW\\Datasets-20221012\\OHS_2020_paired.txt",stringsAsFactors=F)
+```
+
+```{r}
+str(OHS_2020_paired)
+inspect(OHS_2020_paired)
+head(OHS_2020_paired)
+```
+
+<p> Remove pairs having null values </p>
+```{r}
+OHS_1_2 <- data.frame(subset(OHS_2020_paired, !is.na(OHS_1) & !is.na(OHS_2)))
+OHS_1_2
+
+OHS_2_3 <- data.frame(subset(OHS_2020_paired, !is.na(OHS_2) & !is.na(OHS_3)))
+OHS_2_3
+
+OHS_1_3 <- data.frame(subset(OHS_2020_paired, !is.na(OHS_1) & !is.na(OHS_3)))
+OHS_1_3
+```
+
+
+<h3> Approach <h3> 
+<p> We have matched samples. The same student were asked for their Oxford Happiness Score over different points in time. The Score itself is evaluated using Likert Scale, which is an ordinal value. Ranks are considered, not the measured values </p>
+
+<h3> Formulate Hypotheses </h3>
+<p><table>
+  <tr>
+    <th> Null Hypothesis </th>
+    <th> Alternative Hypothesis </th>
+  </tr>
+  <tr>
+    <td> The differences between the student pairs follow a symmetric distribution around zero. There is no change in the students happines score. </td>
+    <td> The differences between the student pairs do not follow a symmetric distribution around zero. There is a significant difference in the happines score between the time points</td>
+  </tr>
+</table></p>
+
+
+```{r}
+wilcox.test(OHS_1_2$OHS_1, OHS_1_2$OHS_2, paired=TRUE)
+```
+
+<h4><b>The p value between year 1 and 2 is 8,5%. So the Null Hypothesis will be accepted. The students were equally happy in year 1 and year 2.</b></h4>
+
+
+```{r}
+wilcox.test(OHS_2_3$OHS_2, OHS_2_3$OHS_3, paired=TRUE)
+```
+<h4><b>The p value between year 2 and 3 is 60,41%. So the Null Hypothesis will be accepted. The students were equally happy in year 2 and year 3.</b></h4>
+
+```{r}
+wilcox.test(OHS_1_3$OHS_1, OHS_1_3$OHS_3, paired=TRUE)
+```
+<h4><b>The p value between year 1 and 3 is 7,34%. So the Null Hypothesis will be accepted. The students were equally happy in year 1 and year 3.</b></h4>
+
+<br>
+<table>
+  <tr>
+    <th>
+<h4><b>Conclusion</b></h4> </th>
+</tr>
+  <tr>
+    <td>
+<h4><b>All evaluated p values were below the threshold of 5%. So the Null Hypothesis will be accepted. The students were equally happy during the three year period.</b></h4> </td>
+  </tr>
+</table>
+
+
+***
+
+
+<h2 id="Exercise_49"> Exercise 49 </h2>
+<p>Use the data set ’ICM’.
+<br>Without assuming the data to have normal distribution,
+decide at .05 significance level if the Communication
+style (open and direct) of students with siblings and
+students without siblings in ICM have identical data
+distribution.
+</p>
+
+
+```{r message=FALSE, warning=FALSE}
+str(ICM)
+inspect(ICM)
+```
+
+<h3> Data Visualization</h3>
+
+```{r, warning=FALSE}
+ggplot(ICM, aes(Siblings, Communication_open_direct))+ 
+  geom_violin(color="orchid3",fill="lightpink",alpha=0.1)+
+  labs(x = "Siblings", y = "Communication open/direct", caption = "Figure 12 - Boxplot and Violinplkot to compare distributions, Exercise 49")+
+  geom_boxplot(width=0.4, varwidth=TRUE,color="royalblue3",fill="lightblue3",
+               alpha=0.4,outlier.colour="red",outlier.fill="red",outlier.size=3)+theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+
+<h3> Formulate Hypotheses </h3>
+<p><table>
+  <tr>
+    <th> Null Hypothesis </th>
+    <th> Alternative Hypothesis </th>
+  </tr>
+  <tr>
+    <td> The communication style of students with siblings and of students without siblings are identical populations. </td>
+    <td> There is a significant difference between the communication style of students without siblings and students with siblings. </td>
+  </tr>
+</table></p>
+
+```{r}
+wilcox.res <- wilcox.test(Communication_open_direct ~ Siblings, data=ICM)
+wilcox.res
+```
+<table>
+  <tr>
+    <th>
+<h4><b> Conclusion </b></h4></th>
+</tr>
+  <tr>
+    <td> 
+<h4><b>At the significance level 0.05 we conclude that H<sub>0</sub> hat to be rejected.</b></h4>
+<h4><b>The p-value is 3% and is below our threshold of 5%. There is a significant difference between the communication style of students without siblings and students with siblings.</b></h4> </td>
+  </tr>
+</table>
+
+
+***
+
+
+<h2 id="Exercise_50"> Exercise 50 </h2>
+<p>Use the data set ’ICM’.
+<br>Without assuming the data to have normal distribution,
+decide at .05 significance level if the mental health of
+students with children and students without children in
+ICM have identical data distribution.
+</p>
+
+
+```{r message=FALSE, warning=FALSE}
+str(ICM)
+inspect(ICM)
+```
+
+<h3> Data Visualization </h3>
+
+```{r, warning=FALSE}
+ggplot(ICM, aes(Children, Mentalhealth))+ 
+  geom_violin(color="orchid3",fill="lightpink",alpha=0.1)+
+  labs(x = "Children", y = "Mentalhealth", caption = "Figure 13 - Boxplot and Violinplkot to compare distributions, Exercise 50")+
+  geom_boxplot(width=0.4, varwidth=TRUE,color="royalblue3",fill="lightblue3",
+               alpha=0.4,outlier.colour="red",outlier.fill="red",outlier.size=3)+theme(plot.caption = element_text(color = "black", face = "italic", hjust = 0.5, size
+= 10))+theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+<h3> Formulate Hypotheses </h3>
+<p><table>
+  <tr>
+    <th> Null Hypothesis </th>
+    <th> Alternative Hypothesis </th>
+  </tr>
+  <tr>
+    <td> The mental health of students with children and of students without children are identical populations. </td>
+    <td> There is a significant difference between the mental health of students with children and students without children.</td>
+  </tr>
+</table></p>
+
+```{r message=FALSE, warning=FALSE}
+wilcox.res <- wilcox.test(Mentalhealth ~ Children, data=ICM)
+wilcox.res
+
+```
+<table>
+  <tr>
+    <th>
+<h4><b> Conclusion </b></h4></th>
+</tr>
+  <tr>
+    <td>
+<h4><b>At the significance level 0.05 we conclude that H<sub>0</sub> hat to be accepted.</b></h4>
+<h4><b>The p-value is 9,124% and is above our threshold of 5%. There is a no difference between the mental health of students without children and students with children.</b></h4></td>
+  </tr>
+</table>
+
+<br>
+
